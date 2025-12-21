@@ -1,16 +1,20 @@
-import React, { useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import { RhythmQuest } from './components/RhythmQuest/RhythmQuest';
 import {
   DeveloperHUD,
-  DeveloperHUDHandle,
+  type DeveloperHUDHandle,
+  type ToolLog,
 } from './components/HUD/DeveloperHUD';
 
 function App() {
   const hudRef = useRef<DeveloperHUDHandle>(null);
 
-  const handleLog = useCallback((log: any) => {
-    hudRef.current?.addLog(log);
-  }, []);
+  const handleLog = useCallback(
+    (log: Omit<ToolLog, 'id' | 'timestamp'>) => {
+      hudRef.current?.addLog(log);
+    },
+    []
+  );
 
   return (
     <div className="app-layout">

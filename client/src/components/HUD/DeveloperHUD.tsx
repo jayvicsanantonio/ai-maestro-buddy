@@ -1,15 +1,11 @@
-import React, {
-  useState,
-  forwardRef,
-  useImperativeHandle,
-} from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import { Terminal, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface ToolLog {
   id: string;
   tool: string;
-  args: any;
+  args: Record<string, unknown>;
   status: 'pending' | 'success' | 'error';
   timestamp: Date;
 }

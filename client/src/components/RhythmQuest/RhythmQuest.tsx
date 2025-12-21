@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Play,
   Square,
@@ -14,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
 import { motion, AnimatePresence } from 'framer-motion';
+import { type ToolLog } from '../HUD/DeveloperHUD';
 
 interface RhythmExercise {
   id: string;
@@ -34,9 +30,9 @@ interface SessionData {
   };
 }
 
-export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
-  onLog,
-}) => {
+export const RhythmQuest: React.FC<{
+  onLog: (log: Omit<ToolLog, 'id' | 'timestamp'>) => void;
+}> = ({ onLog }) => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [bpm, setBpm] = useState(80);
   const [peaks, setPeaks] = useState<

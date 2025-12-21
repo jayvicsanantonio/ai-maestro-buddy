@@ -1,0 +1,92 @@
+import { VertexAI, ChatSession, HarmCategory, HarmBlockThreshold, } from '@google-cloud/vertexai';
+import { ToolRegistry } from './tools.js';
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+const SYSTEM_PROMPT = `
+You are MaestroBuddy, a kind and patient music teacher for kids aged 6-12. 
+Your goal is to help them with their "Rhythm Quest".
+
+CORE BEHAVIORS:
+1. Listen and analyze: Use the analyze_audio_window tool to understand their performance.
+2. Positive Feedback: Always start with one thing they did well.
+3. Specific Correction: Suggest one small improvement (e.g., "try to clap a little sooner on the third beat").
+4. Adapt: If they are struggling, use set_metronome to slow down the BPM.
+5. Empathy: Be encouraging, use simple words, and keep responses short (1-3 sentences).
+
+You have access to tools to update the UI, change the metronome, and reward badges.
+Always produce valid JSON for tool calls.
+`;
+export class GeminiCoach {
+    chat = null;
+    vertexAI = null;
+    constructor() {
+        if (PROJECT_ID) {
+            this.vertexAI = new VertexAI({
+                project: PROJECT_ID,
+                location: LOCATION,
+            });
+            const model = this.vertexAI.getGenerativeModel({
+                model: 'gemini-1.5-flash',
+                systemInstruction: SYSTEM_PROMPT,
+                safetySettings: [
+                    {
+                        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                    },
+                ],
+                generationConfig: { maxOutputTokens: 256, temperature: 0.7 },
+            });
+            const declarations = Object.entries(ToolRegistry).map(([name, schema]) => ({
+                name,
+                description: schema.description,
+                parameters: schema.parameters,
+            }));
+            this.chat = model.startChat({
+                tools: [{ functionDeclarations: declarations }],
+            });
+        }
+    }
+    async processMetrics(metrics) {
+        if (!this.chat) {
+            return {
+                feedback: "Great job clapping! I'm still setting up my brain, but keep practicing.",
+                toolTrace: {
+                    tool: 'mock_analyze',
+                    status: 'success',
+                    args: { count: metrics.length },
+                },
+            };
+        }
+        try {
+            const result = await this.chat.sendMessage(`Student metrics for the last window: ${JSON.stringify(metrics)}`);
+            const response = result.response;
+            const candidates = response.candidates;
+            if (!candidates ||
+                candidates.length === 0 ||
+                !candidates[0]?.content) {
+                return { feedback: "I'm listening closely, keep going!" };
+            }
+            const candidate = candidates[0];
+            const parts = candidate.content.parts || [];
+            const call = parts.find((p) => p.functionCall);
+            const textPart = parts.find((p) => p.text);
+            const text = textPart?.text || 'Keep it up!';
+            if (call && call.functionCall) {
+                return {
+                    feedback: text,
+                    toolTrace: {
+                        tool: call.functionCall.name,
+                        args: call.functionCall.args,
+                        status: 'success',
+                    },
+                };
+            }
+            return { feedback: text };
+        }
+        catch (err) {
+            console.error('Gemini processing error:', err);
+            return { feedback: 'Oops, I missed that beat! Try again.' };
+        }
+    }
+}
+//# sourceMappingURL=GeminiCoach.js.map
