@@ -60,4 +60,21 @@ export const ToolRegistry = {
       required: ['type', 'reason'],
     },
   },
+  get_rhythm_exercises: {
+    description:
+      'Fetches a list of rhythmic exercises from the educational content library.',
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        level: {
+          type: SchemaType.NUMBER,
+          description: 'Difficulty level (1-5)',
+        },
+        style: {
+          type: SchemaType.STRING,
+          description: 'Aesthetic style e.g. basic, rock, jazz',
+        },
+      },
+    },
+  },
 };

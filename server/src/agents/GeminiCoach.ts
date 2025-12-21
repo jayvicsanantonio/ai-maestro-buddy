@@ -3,7 +3,7 @@ import {
   ChatSession,
   HarmCategory,
   HarmBlockThreshold,
-  FunctionDeclaration,
+  type FunctionDeclaration,
 } from '@google-cloud/vertexai';
 import { ToolRegistry } from './tools.js';
 
@@ -84,11 +84,15 @@ export class GeminiCoach {
       );
       const response = result.response;
 
-      if (!response.candidates || response.candidates.length === 0) {
+      const candidates = response.candidates;
+      if (
+        !candidates ||
+        candidates.length === 0 ||
+        !candidates[0]?.content
+      ) {
         return { feedback: "I'm listening closely, keep going!" };
       }
-
-      const candidate = response.candidates[0];
+      const candidate = candidates[0]!;
       const parts = candidate.content.parts || [];
 
       const call = parts.find((p) => p.functionCall);

@@ -4,14 +4,34 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
-import { Play, Square, Music, Zap, RefreshCw } from 'lucide-react';
+import {
+  Play,
+  Square,
+  Music,
+  Zap,
+  RefreshCw,
+  Star,
+} from 'lucide-react';
 import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface RhythmExercise {
+  id: string;
+  name: string;
+  style: string;
+  level: number;
+  bpm: number;
+  pattern: number[];
+  instructions: string;
+}
 
 interface SessionData {
   sessionId: string;
   uid: string;
-  questState: any;
+  questState: {
+    bpm: number;
+    quest: string;
+  };
 }
 
 export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
@@ -27,6 +47,9 @@ export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
     "Tap 'Start Lesson' to begin!"
   );
   const [isConnecting, setIsConnecting] = useState(true);
+  const [availableExercises, setAvailableExercises] = useState<
+    RhythmExercise[]
+  >([]);
 
   const questIdCounter = useRef(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -62,11 +85,31 @@ export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
           );
           setIsConnecting(false);
         };
+
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
+
           if (msg.type === 'feedback') {
             setFeedback(msg.content);
             if (msg.toolTrace) onLog(msg.toolTrace);
+
+            // Handle State Updates from Agent
+            if (msg.stateUpdate) {
+              const { tool, args } = msg.stateUpdate;
+              if (tool === 'set_metronome' && args.bpm) {
+                setBpm(args.bpm);
+              }
+              if (tool === 'reward_badge') {
+                setFeedback(
+                  `🏆 BADGE EARNED: ${args.type}! ${args.reason}`
+                );
+              }
+            }
+
+            // Handle MCP Results
+            if (msg.mcpResult) {
+              setAvailableExercises(msg.mcpResult);
+            }
           }
         };
         wsRef.current = ws;
@@ -81,7 +124,6 @@ export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
 
   const onPeak = useCallback(
     (time: number) => {
-      // Basic detection logic: find offset from nearest beat
       const beatInterval = 60 / bpm;
       const elapsedTime = time - startTimeRef.current;
       const nearestBeat =
@@ -91,17 +133,12 @@ export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
       const newPeak = { id: questIdCounter.current++, time, offset };
       setPeaks((prev) => [...prev.slice(-9), newPeak]);
 
-      // Send metrics to backend if we have a connection
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(
           JSON.stringify({
             type: 'metrics',
             sessionId: session?.sessionId,
-            metrics: {
-              timestamp: time,
-              offset,
-              bpm,
-            },
+            metrics: { timestamp: time, offset, bpm },
           })
         );
       }
@@ -199,6 +236,39 @@ export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
             ))}
           </AnimatePresence>
         </div>
+
+        {availableExercises.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="exercise-shelf"
+          >
+            <div className="shelf-header">
+              <Star size={14} className="accent" />
+              <span>Recommended Lessons</span>
+            </div>
+            <div className="exercise-list">
+              {availableExercises.map((ex) => (
+                <button
+                  key={ex.id}
+                  className="exercise-card"
+                  onClick={() => {
+                    setBpm(ex.bpm);
+                    setFeedback(
+                      `Starting: ${ex.name}. ${ex.instructions}`
+                    );
+                    setAvailableExercises([]);
+                  }}
+                >
+                  <span className="ex-title">{ex.name}</span>
+                  <span className="ex-meta">
+                    {ex.style} • {ex.bpm} BPM
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </main>
 
       <footer className="quest-footer">
@@ -337,6 +407,68 @@ export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
           font-weight: 600;
           font-family: 'JetBrains Mono', monospace;
           opacity: 0.8;
+        }
+
+        .exercise-shelf {
+          margin-top: 3rem;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 1.5rem;
+          padding: 1.5rem;
+        }
+
+        .shelf-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #666;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .shelf-header .accent { color: #fbbf24; }
+
+        .exercise-list {
+          display: flex;
+          gap: 1rem;
+          overflow-x: auto;
+          padding-bottom: 0.5rem;
+        }
+
+        .exercise-card {
+          flex: 0 0 200px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1rem;
+          padding: 1rem;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .exercise-card:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: #4ade80;
+          transform: translateY(-2px);
+        }
+
+        .ex-title {
+          font-weight: 700;
+          font-size: 0.9rem;
+          color: #eee;
+        }
+
+        .ex-meta {
+          font-size: 0.7rem;
+          color: #666;
+          text-transform: capitalize;
         }
 
         .action-button {

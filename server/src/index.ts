@@ -1,11 +1,15 @@
-import express, { Request, Response } from 'express';
+import express, { type Request, type Response } from 'express';
 import expressWs from 'express-ws';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { GeminiCoach } from './agents/GeminiCoach.js';
+import fetch from 'node-fetch';
 
 dotenv.config();
+
+const MCP_GATEWAY_URL =
+  process.env.MCP_GATEWAY_URL || 'http://localhost:3002/mcp/execute';
 
 const { app, getWss } = expressWs(express());
 const port = process.env.PORT || 3001;
@@ -114,14 +118,42 @@ app.ws('/api/session/stream', (ws, req) => {
             metricsBuffer
           );
 
-          ws.send(
-            JSON.stringify({
-              type: 'feedback',
-              content: feedback,
-              toolTrace,
-            })
-          );
+          let responsePayload: any = {
+            type: 'feedback',
+            content: feedback,
+            toolTrace,
+          };
 
+          // Handle Tool Call Execution
+          if (toolTrace && toolTrace.status === 'success') {
+            const { tool, args } = toolTrace;
+
+            if (tool === 'get_rhythm_exercises') {
+              try {
+                const mcpRes = await fetch(MCP_GATEWAY_URL, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ tool, args }),
+                });
+                const result = await mcpRes.json();
+                responsePayload.mcpResult = result;
+              } catch (err) {
+                console.error('MCP Tool Execution Error:', err);
+                responsePayload.toolTrace.status = 'error';
+              }
+            }
+
+            // Local updates (UI, Metronome) are just passed to client
+            if (
+              tool === 'update_ui' ||
+              tool === 'set_metronome' ||
+              tool === 'reward_badge'
+            ) {
+              responsePayload.stateUpdate = { tool, args };
+            }
+          }
+
+          ws.send(JSON.stringify(responsePayload));
           metricsBuffer = []; // Clear buffer
         }
       }
