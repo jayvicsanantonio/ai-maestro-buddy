@@ -42,10 +42,10 @@ MCP_GATEWAY_URL=http://localhost:3002/mcp/execute
 
 ```bash
 # Install dependencies for all packages
-npm run install-all
+pnpm install
 
 # Start all components in development mode
-npm run dev
+pnpm dev
 ```
 
 ## 🛠️ Tech Stack

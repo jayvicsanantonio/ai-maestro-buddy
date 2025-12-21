@@ -9,7 +9,7 @@
     "mcp-gateway"
   ],
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"client,server,mcp\" -c \"cyan.bold,green.bold,yellow.bold\" \"pnpm --filter client dev\" \"pnpm --filter server dev\" \"pnpm --filter mcp-gateway dev\"",
     "install-all": "pnpm install",
     "build": "pnpm -r build"
   },
@@ -22,5 +22,8 @@
     "vertex-ai"
   ],
   "author": "Jayvic San Antonio",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
