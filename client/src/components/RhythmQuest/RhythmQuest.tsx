@@ -43,6 +43,9 @@ export const RhythmQuest: React.FC<{
     "Tap 'Start Lesson' to begin!"
   );
   const [isConnecting, setIsConnecting] = useState(true);
+  const [connectionError, setConnectionError] = useState<
+    string | null
+  >(null);
   const [availableExercises, setAvailableExercises] = useState<
     RhythmExercise[]
   >([]);
@@ -111,6 +114,10 @@ export const RhythmQuest: React.FC<{
         wsRef.current = ws;
       } catch (err) {
         console.error('Failed to init session:', err);
+        setConnectionError(
+          'Could not reach the AI Teacher. Please make sure the server is running.'
+        );
+        setIsConnecting(false);
       }
     };
 
@@ -155,6 +162,22 @@ export const RhythmQuest: React.FC<{
       setFeedback('Listen to the beat and clap along!');
     }
   };
+
+  if (connectionError) {
+    return (
+      <div className="loader error">
+        <RefreshCw className="error-icon" size={48} />
+        <h2>Connection Failed</h2>
+        <p>{connectionError}</p>
+        <button
+          className="retry-button"
+          onClick={() => window.location.reload()}
+        >
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
 
   if (isConnecting) {
     return (
@@ -288,6 +311,27 @@ export const RhythmQuest: React.FC<{
           align-items: center;
           gap: 1.5rem;
           color: #888;
+          text-align: center;
+          max-width: 400px;
+        }
+
+        .loader.error h2 { color: #ef4444; margin: 0; }
+        .error-icon { color: #ef4444; }
+
+        .retry-button {
+          padding: 0.75rem 2rem;
+          background: #333;
+          border: 1px solid #444;
+          color: white;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+
+        .retry-button:hover {
+          background: #444;
+          border-color: #666;
         }
 
         .spin {
