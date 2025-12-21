@@ -4,37 +4,133 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
-import { Play, Square, Music, Zap } from 'lucide-react';
+import { Play, Square, Music, Zap, RefreshCw } from 'lucide-react';
 import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const RhythmQuest: React.FC = () => {
+interface SessionData {
+  sessionId: string;
+  uid: string;
+  questState: any;
+}
+
+export const RhythmQuest: React.FC<{ onLog: (log: any) => void }> = ({
+  onLog,
+}) => {
+  const [session, setSession] = useState<SessionData | null>(null);
   const [bpm, setBpm] = useState(80);
-  const [peaks, setPeaks] = useState<{ id: number; time: number }[]>(
-    []
-  );
+  const [peaks, setPeaks] = useState<
+    { id: number; time: number; offset: number }[]
+  >([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [feedback, setFeedback] = useState(
+    "Tap 'Start Lesson' to begin!"
+  );
+  const [isConnecting, setIsConnecting] = useState(true);
+
   const questIdCounter = useRef(0);
+  const wsRef = useRef<WebSocket | null>(null);
+  const startTimeRef = useRef<number>(0);
 
-  const onPeak = useCallback((time: number) => {
-    setPeaks((prev) => [
-      ...prev.slice(-10),
-      { id: questIdCounter.current++, time },
-    ]);
-  }, []);
+  // Initialize Session
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const storedUid = localStorage.getItem('maestro_uid');
+        const res = await fetch(
+          'http://localhost:3001/api/session/start',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: storedUid }),
+          }
+        );
+        const data = await res.json();
+        setSession(data);
+        localStorage.setItem('maestro_uid', data.uid);
 
-  const { isListening, startListening, stopListening } =
-    useAudioAnalyzer(onPeak);
+        // Connect WebSocket
+        const ws = new WebSocket(
+          'ws://localhost:3001/api/session/stream'
+        );
+        ws.onopen = () => {
+          ws.send(
+            JSON.stringify({
+              type: 'auth',
+              sessionId: data.sessionId,
+            })
+          );
+          setIsConnecting(false);
+        };
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+          if (msg.type === 'feedback') {
+            setFeedback(msg.content);
+            if (msg.toolTrace) onLog(msg.toolTrace);
+          }
+        };
+        wsRef.current = ws;
+      } catch (err) {
+        console.error('Failed to init session:', err);
+      }
+    };
+
+    initSession();
+    return () => wsRef.current?.close();
+  }, [onLog]);
+
+  const onPeak = useCallback(
+    (time: number) => {
+      // Basic detection logic: find offset from nearest beat
+      const beatInterval = 60 / bpm;
+      const elapsedTime = time - startTimeRef.current;
+      const nearestBeat =
+        Math.round(elapsedTime / beatInterval) * beatInterval;
+      const offset = elapsedTime - nearestBeat;
+
+      const newPeak = { id: questIdCounter.current++, time, offset };
+      setPeaks((prev) => [...prev.slice(-9), newPeak]);
+
+      // Send metrics to backend if we have a connection
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(
+          JSON.stringify({
+            type: 'metrics',
+            sessionId: session?.sessionId,
+            metrics: {
+              timestamp: time,
+              offset,
+              bpm,
+            },
+          })
+        );
+      }
+    },
+    [bpm, session]
+  );
+
+  const { startListening, stopListening } = useAudioAnalyzer(onPeak);
 
   const toggleQuest = () => {
-    if (isListening) {
+    if (isPlaying) {
       stopListening();
       setIsPlaying(false);
     } else {
+      startTimeRef.current = performance.now() / 1000;
       startListening();
       setIsPlaying(true);
+      setFeedback('Listen to the beat and clap along!');
     }
   };
+
+  if (isConnecting) {
+    return (
+      <div className="loader">
+        <RefreshCw className="spin" size={48} />
+        <p>Connecting to Teacher...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="quest-container">
@@ -44,7 +140,7 @@ export const RhythmQuest: React.FC = () => {
           <span>Rhythm Quest</span>
         </div>
         <h1>Feel the Beat</h1>
-        <p>Clap or tap along with the metronome!</p>
+        <p className="feedback-text">{feedback}</p>
       </header>
 
       <main className="quest-main">
@@ -61,8 +157,13 @@ export const RhythmQuest: React.FC = () => {
                 animate={
                   isPlaying
                     ? {
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 1, 0.5],
+                        scale: [1, 1.3, 1],
+                        opacity: [0.3, 1, 0.3],
+                        boxShadow: [
+                          '0 0 0px rgba(74, 222, 128, 0)',
+                          '0 0 20px rgba(74, 222, 128, 0.5)',
+                          '0 0 0px rgba(74, 222, 128, 0)',
+                        ],
                       }
                     : {}
                 }
@@ -70,6 +171,7 @@ export const RhythmQuest: React.FC = () => {
                   duration: 60 / bpm,
                   repeat: Infinity,
                   delay: (i - 1) * (60 / bpm),
+                  ease: 'easeInOut',
                 }}
               />
             ))}
@@ -81,12 +183,18 @@ export const RhythmQuest: React.FC = () => {
             {peaks.map((peak) => (
               <motion.div
                 key={peak.id}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                initial={{ scale: 0, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0, opacity: 0 }}
-                className="peak-indicator"
+                className={`peak-indicator ${
+                  Math.abs(peak.offset) < 0.05 ? 'perfect' : 'off'
+                }`}
               >
-                <Zap size={20} fill="currentColor" />
+                <Zap size={24} fill="currentColor" />
+                <span className="offset-label">
+                  {peak.offset > 0 ? '+' : ''}
+                  {peak.offset.toFixed(2)}s
+                </span>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -108,31 +216,62 @@ export const RhythmQuest: React.FC = () => {
       </footer>
 
       <style>{`
+        .loader {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1.5rem;
+          color: #888;
+        }
+
+        .spin {
+          animation: spin 2s linear infinite;
+          color: #4ade80;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
         .quest-container {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: space-between;
           padding: 2rem;
-          min-height: 80vh;
+          min-height: 85vh;
+          width: 100%;
+          max-width: 800px;
           color: white;
         }
 
         .quest-header {
           text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .feedback-text {
+          font-size: 1.4rem;
+          font-weight: 500;
+          color: #eee;
+          min-height: 2em;
+          margin-top: 1rem;
         }
 
         .badge {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          background: rgba(255, 255, 255, 0.1);
-          padding: 0.5rem 1rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 0.5rem 1.2rem;
           border-radius: 2rem;
           font-size: 0.8rem;
           margin-bottom: 1rem;
           text-transform: uppercase;
-          letter-spacing: 0.1rem;
+          letter-spacing: 0.15rem;
+          color: #4ade80;
         }
 
         .metronome-visual {
@@ -140,20 +279,20 @@ export const RhythmQuest: React.FC = () => {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 2rem;
+          gap: 3rem;
+          margin: 4rem 0;
         }
 
         .beaters {
           display: flex;
-          gap: 1rem;
+          gap: 2rem;
         }
 
         .beater {
-          width: 20px;
-          height: 20px;
+          width: 24px;
+          height: 24px;
           background: #4ade80;
           border-radius: 50%;
-          box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
         }
 
         .bpm-display {
@@ -163,46 +302,72 @@ export const RhythmQuest: React.FC = () => {
         }
 
         .bpm-value {
-          font-size: 4rem;
-          font-weight: 800;
+          font-size: 6rem;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.2rem;
+        }
+
+        .bpm-label {
+          color: #444;
+          font-weight: 700;
+          letter-spacing: 0.2rem;
         }
 
         .peak-history {
           display: flex;
-          gap: 0.5rem;
-          height: 40px;
+          gap: 1rem;
+          height: 80px;
           margin-top: 2rem;
+          perspective: 1000px;
         }
 
         .peak-indicator {
-          color: #fbbf24;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .peak-indicator.perfect { color: #4ade80; }
+        .peak-indicator.off { color: #fbbf24; }
+
+        .offset-label {
+          font-size: 0.7rem;
+          font-weight: 600;
+          font-family: 'JetBrains Mono', monospace;
+          opacity: 0.8;
         }
 
         .action-button {
           display: flex;
           align-items: center;
           gap: 1rem;
-          padding: 1.5rem 3rem;
+          padding: 1.5rem 4rem;
           border-radius: 4rem;
-          font-size: 1.2rem;
-          font-weight: 600;
+          font-size: 1.4rem;
+          font-weight: 700;
           border: none;
           cursor: pointer;
-          transition: transform 0.2s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          margin-bottom: 2rem;
         }
 
         .action-button:hover {
-          transform: scale(1.05);
+          transform: scale(1.05) translateY(-2px);
+          filter: brightness(1.1);
         }
 
         .action-button.start {
           background: white;
-          color: #1a1a1a;
+          color: #000;
+          box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
         }
 
         .action-button.stop {
           background: #ef4444;
           color: white;
+          box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
         }
       `}</style>
     </div>
