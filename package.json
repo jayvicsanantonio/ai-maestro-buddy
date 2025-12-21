@@ -1,0 +1,26 @@
+{
+  "name": "ai-maestro-buddy",
+  "private": true,
+  "version": "1.0.0",
+  "description": "AI-powered real-time music teacher for kids",
+  "workspaces": [
+    "client",
+    "server",
+    "mcp-gateway"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "install-all": "npm install --workspaces",
+    "build": "npm run build --workspaces"
+  },
+  "keywords": [
+    "ai",
+    "music",
+    "education",
+    "rhythm",
+    "gemini",
+    "vertex-ai"
+  ],
+  "author": "Jayvic San Antonio",
+  "license": "MIT"
+}
