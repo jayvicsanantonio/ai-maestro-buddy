@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { GeminiCoach } from './agents/GeminiCoach.js';
 import fetch from 'node-fetch';
+import textToSpeech from '@google-cloud/text-to-speech';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const MCP_GATEWAY_URL =
 
 const { app, getWss } = expressWs(express());
 const port = process.env.PORT || 3001;
+const ttsClient = new textToSpeech.TextToSpeechClient();
 
 app.use(cors());
 app.use(express.json());
@@ -78,6 +80,32 @@ app.post('/api/session/start', (req: Request, res: Response) => {
     student,
     questState,
   });
+});
+
+// Text-to-Speech proxy
+app.post('/api/tts', async (req: Request, res: Response) => {
+  const { text } = req.body;
+  if (!text) {
+    res.status(400).json({ error: 'Text is required' });
+    return;
+  }
+
+  try {
+    const [response] = await ttsClient.synthesizeSpeech({
+      input: { text },
+      voice: {
+        languageCode: 'en-US',
+        name: 'en-US-Journey-F', // Premium Journey voice
+      },
+      audioConfig: { audioEncoding: 'MP3' },
+    });
+
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(response.audioContent);
+  } catch (err) {
+    console.error('TTS Error:', err);
+    res.status(500).json({ error: 'Voice synthesis failed' });
+  }
 });
 
 // WebSocket for real-time coaching and metrics

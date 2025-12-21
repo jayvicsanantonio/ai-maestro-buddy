@@ -1,63 +1,51 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export const useSpeech = () => {
-  const synth = useRef<SpeechSynthesis | null>(
-    typeof window !== 'undefined' ? window.speechSynthesis : null
-  );
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const preferredVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    const updateVoices = () => {
-      const v = synth.current?.getVoices() || [];
-      setVoices(v);
-
-      // Try to find a high-quality "kid-friendly" voice
-      const priority = [
-        'Eddy',
-        'Flo',
-        'Karen',
-        'Samantha',
-        'Google US English',
-      ];
-      for (const name of priority) {
-        const found = v.find((voice) => voice.name.includes(name));
-        if (found) {
-          preferredVoiceRef.current = found;
-          break;
-        }
+  const speak = useCallback(async (text: string) => {
+    try {
+      // 1. Cancel any previous audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
       }
-    };
 
-    updateVoices();
-    if (synth.current?.onvoiceschanged !== undefined) {
-      synth.current.onvoiceschanged = updateVoices;
+      setIsSpeaking(true);
+
+      // 2. Fetch high-quality audio from the BFF
+      const response = await fetch('http://localhost:3001/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) throw new Error('TTS Fetch Failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      // 3. Play the audio
+      const audio = new Audio(url);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+      };
+
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.error('Cloud TTS Error:', err);
+      setIsSpeaking(false);
     }
   }, []);
 
-  const speak = useCallback((text: string) => {
-    if (!synth.current) return;
-
-    // Cancel any ongoing speech
-    synth.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (preferredVoiceRef.current) {
-      utterance.voice = preferredVoiceRef.current;
-    }
-
-    // Adjust for kid-friendly tone
-    utterance.pitch = 1.2;
-    utterance.rate = 1.0;
-    utterance.volume = 1.0;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    synth.current.speak(utterance);
-  }, []);
-
-  return { speak, voices, isSpeaking };
+  return { speak, isSpeaking };
 };

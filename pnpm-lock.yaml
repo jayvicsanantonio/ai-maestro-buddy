@@ -103,6 +103,9 @@ importers:
       '@google-cloud/firestore':
         specifier: ^8.0.0
         version: 8.0.0
+      '@google-cloud/text-to-speech':
+        specifier: ^6.4.0
+        version: 6.4.0
       '@google-cloud/vertexai':
         specifier: ^1.10.0
         version: 1.10.0
@@ -447,6 +450,10 @@ packages:
 
   '@google-cloud/firestore@8.0.0':
     resolution: {integrity: sha512-Qy6YAkDxWRBMYE+eMEnvq6q8wnmzGvSdenlcqMvGhJHDDxJuyGJex5oDX2HgU0H7q9I9XCI50kErkP8qsfc7Gg==}
+    engines: {node: '>=18'}
+
+  '@google-cloud/text-to-speech@6.4.0':
+    resolution: {integrity: sha512-KUnK+mBYz9aegxHrBbwEignOkGRqXvqOXs/EGY7CAJhMFKuNSieW02/PV/ipVRsJM11MP69qgTgEetoyAN0HAg==}
     engines: {node: '>=18'}
 
   '@google-cloud/vertexai@1.10.0':
@@ -2383,6 +2390,12 @@ snapshots:
       functional-red-black-tree: 1.0.1
       google-gax: 5.0.6
       protobufjs: 7.5.4
+    transitivePeerDependencies:
+      - supports-color
+
+  '@google-cloud/text-to-speech@6.4.0':
+    dependencies:
+      google-gax: 5.0.6
     transitivePeerDependencies:
       - supports-color
 
