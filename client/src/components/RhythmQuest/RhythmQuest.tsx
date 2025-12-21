@@ -8,6 +8,7 @@ import {
   Star,
 } from 'lucide-react';
 import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
+import { useSpeech } from '../../hooks/useSpeech';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type ToolLog } from '../HUD/DeveloperHUD';
 
@@ -42,6 +43,7 @@ export const RhythmQuest: React.FC<{
   const [feedback, setFeedback] = useState(
     "Tap 'Start Lesson' to begin!"
   );
+  const { speak, isSpeaking } = useSpeech();
   const [isConnecting, setIsConnecting] = useState(true);
   const [connectionError, setConnectionError] = useState<
     string | null
@@ -49,6 +51,13 @@ export const RhythmQuest: React.FC<{
   const [availableExercises, setAvailableExercises] = useState<
     RhythmExercise[]
   >([]);
+
+  // Speak feedback when it changes
+  useEffect(() => {
+    if (feedback && feedback !== "Tap 'Start Lesson' to begin!") {
+      speak(feedback);
+    }
+  }, [feedback, speak]);
 
   const questIdCounter = useRef(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -196,7 +205,20 @@ export const RhythmQuest: React.FC<{
           <span>Rhythm Quest</span>
         </div>
         <h1>Feel the Beat</h1>
-        <p className="feedback-text">{feedback}</p>
+        <motion.p
+          className="feedback-text"
+          animate={{
+            scale: isSpeaking ? [1, 1.05, 1] : 1,
+            color: isSpeaking ? '#4ade80' : '#ffffff',
+          }}
+          transition={{
+            scale: isSpeaking
+              ? { repeat: Infinity, duration: 1.5 }
+              : { duration: 0.3 },
+          }}
+        >
+          {feedback}
+        </motion.p>
       </header>
 
       <main className="quest-main">
