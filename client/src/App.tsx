@@ -20,6 +20,14 @@ function App() {
     <div className="app-layout">
       <div className="bg-gradient" />
 
+      {/* Decorative Musical Notes */}
+      <div className="decorations">
+        <div className="note n1">♪</div>
+        <div className="note n2">♫</div>
+        <div className="note n3">♬</div>
+        <div className="note n4">♩</div>
+      </div>
+
       <header className="app-header">
         <div className="logo">
           Maestro<span className="accent">Buddy</span>
@@ -33,16 +41,19 @@ function App() {
       <DeveloperHUD ref={hudRef} />
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
         :root {
-          --bg-dark: #050505;
-          --primary: #4ade80;
-          --accent: #fbbf24;
+          --bg-dark: #2d1b4e;
+          --primary: #ffce00;
+          --accent: #ff4785;
+          --soft-blue: #4fb8ff;
         }
 
         body {
           margin: 0;
           padding: 0;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: 'Quicksand', sans-serif;
           background: var(--bg-dark);
           color: white;
           overflow: hidden;
@@ -94,6 +105,35 @@ function App() {
           justify-content: center;
           position: relative;
           z-index: 1;
+        }
+
+        /* Decorative Notes */
+        .decorations {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+        }
+
+        .note {
+          position: absolute;
+          font-size: 2.5rem;
+          color: rgba(255, 255, 255, 0.1);
+          animation: float 8s infinite ease-in-out;
+        }
+
+        .n1 { top: 15%; left: 10%; animation-delay: 0s; }
+        .n2 { top: 70%; left: 15%; animation-delay: 2s; font-size: 3rem; }
+        .n3 { top: 20%; left: 85%; animation-delay: 4s; }
+        .n4 { top: 75%; left: 80%; animation-delay: 1s; font-size: 2rem; }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-30px) rotate(20deg); }
         }
 
         /* Prevent text selection during practice */

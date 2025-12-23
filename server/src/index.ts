@@ -14,7 +14,14 @@ const MCP_GATEWAY_URL =
 
 const { app, getWss } = expressWs(express());
 const port = process.env.PORT || 3001;
-const ttsClient = new textToSpeech.TextToSpeechClient();
+
+let ttsClient: textToSpeech.TextToSpeechClient | null = null;
+try {
+  // We initialize lazily or inside a try catch to prevent startup crash if no ADC
+  ttsClient = new textToSpeech.TextToSpeechClient();
+} catch (e) {
+  console.error('Failed to initialize Google Cloud TTS Client:', e);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -87,6 +94,15 @@ app.post('/api/tts', async (req: Request, res: Response) => {
   const { text } = req.body;
   if (!text) {
     res.status(400).json({ error: 'Text is required' });
+    return;
+  }
+
+  if (!ttsClient) {
+    res
+      .status(503)
+      .json({
+        error: 'TTS service not initialized. Check credentials.',
+      });
     return;
   }
 
