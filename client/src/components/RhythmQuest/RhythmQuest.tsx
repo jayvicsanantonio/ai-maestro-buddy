@@ -11,7 +11,11 @@ import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
 import { useSpeech } from '../../hooks/useSpeech';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type ToolLog } from '../HUD/DeveloperHUD';
-import { MaestroCharacter } from '../MaestroCharacter/MaestroCharacter';
+import {
+  MaestroCharacter,
+  type CharacterSettings,
+} from '../MaestroCharacter/MaestroCharacter';
+import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 
 interface RhythmExercise {
   id: string;
@@ -26,6 +30,9 @@ interface RhythmExercise {
 interface SessionData {
   sessionId: string;
   uid: string;
+  student: {
+    character: CharacterSettings;
+  };
   questState: {
     bpm: number;
     quest: string;
@@ -52,6 +59,9 @@ export const RhythmQuest: React.FC<{
   const [availableExercises, setAvailableExercises] = useState<
     RhythmExercise[]
   >([]);
+  const [showCreator, setShowCreator] = useState(false);
+  const [characterSettings, setCharacterSettings] =
+    useState<CharacterSettings | null>(null);
 
   // Speak feedback when it changes
   useEffect(() => {
@@ -79,6 +89,7 @@ export const RhythmQuest: React.FC<{
         );
         const data = await res.json();
         setSession(data);
+        setCharacterSettings(data.student.character);
         localStorage.setItem('maestro_uid', data.uid);
 
         // Connect WebSocket
@@ -173,6 +184,28 @@ export const RhythmQuest: React.FC<{
     }
   };
 
+  const handleSaveCharacter = async (settings: CharacterSettings) => {
+    if (!session) return;
+    try {
+      const res = await fetch(
+        'http://localhost:3001/api/student/update',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: session.uid,
+            character: settings,
+          }),
+        }
+      );
+      const data = await res.json();
+      setCharacterSettings(data.student.character);
+      setShowCreator(false);
+    } catch (err) {
+      console.error('Failed to update character:', err);
+    }
+  };
+
   if (connectionError) {
     return (
       <div className="loader error">
@@ -194,6 +227,22 @@ export const RhythmQuest: React.FC<{
       <div className="loader">
         <RefreshCw className="spin" size={48} />
         <p>Connecting to Teacher...</p>
+      </div>
+    );
+  }
+
+  if (showCreator || !characterSettings) {
+    return (
+      <div className="creator-view">
+        <CharacterCreator
+          initialSettings={characterSettings || undefined}
+          onSave={handleSaveCharacter}
+          onCancel={
+            characterSettings
+              ? () => setShowCreator(false)
+              : undefined
+          }
+        />
       </div>
     );
   }
@@ -225,7 +274,16 @@ export const RhythmQuest: React.FC<{
           <MaestroCharacter
             isSpeaking={isSpeaking}
             isPlaying={isPlaying}
+            settings={characterSettings}
           />
+          {!isPlaying && (
+            <button
+              className="edit-character-button"
+              onClick={() => setShowCreator(true)}
+            >
+              Change Look
+            </button>
+          )}
         </div>
       </header>
 
@@ -598,6 +656,32 @@ export const RhythmQuest: React.FC<{
         .action-button.stop {
           background: var(--accent);
           color: white;
+        }
+
+        .edit-character-button {
+          margin-top: 1rem;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 1rem;
+          font-size: 0.8rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .edit-character-button:hover {
+          background: rgba(255, 255, 255, 0.2);
+          transform: translateY(-2px);
+        }
+
+        .creator-view {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          min-height: 80vh;
         }
       `}</style>
     </div>

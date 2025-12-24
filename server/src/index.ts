@@ -38,9 +38,25 @@ class Store {
         createdAt: new Date().toISOString(),
         skill: { tempo_stability: 0.5, confidence: 0.1 },
         preferences: { coach_style: 'encouraging', difficulty: 1 },
+        character: {
+          color: '#4FB8FF',
+          accessory: 'none',
+          eyeStyle: 'round',
+        },
       });
     }
     return this.students.get(uid);
+  }
+
+  updateStudent(uid: string, data: any) {
+    const student = this.getStudent(uid);
+    const updated = {
+      ...student,
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    this.students.set(uid, updated);
+    return updated;
   }
 
   saveSession(sessionId: string, data: any) {
@@ -89,6 +105,18 @@ app.post('/api/session/start', (req: Request, res: Response) => {
   });
 });
 
+// Update student profile (e.g. character settings)
+app.post('/api/student/update', (req: Request, res: Response) => {
+  const { uid, ...updates } = req.body;
+  if (!uid) {
+    res.status(400).json({ error: 'UID is required' });
+    return;
+  }
+
+  const student = store.updateStudent(uid, updates);
+  res.json({ student });
+});
+
 // Text-to-Speech proxy
 app.post('/api/tts', async (req: Request, res: Response) => {
   const { text } = req.body;
@@ -98,11 +126,9 @@ app.post('/api/tts', async (req: Request, res: Response) => {
   }
 
   if (!ttsClient) {
-    res
-      .status(503)
-      .json({
-        error: 'TTS service not initialized. Check credentials.',
-      });
+    res.status(503).json({
+      error: 'TTS service not initialized. Check credentials.',
+    });
     return;
   }
 

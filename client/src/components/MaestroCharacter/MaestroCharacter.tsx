@@ -1,14 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+export interface CharacterSettings {
+  color: string;
+  accessory: 'none' | 'headphones' | 'cap' | 'bow';
+  eyeStyle: 'round' | 'star' | 'wink';
+}
+
 interface MaestroCharacterProps {
   isSpeaking: boolean;
   isPlaying: boolean;
+  settings?: CharacterSettings;
 }
 
 export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
   isSpeaking,
   isPlaying,
+  settings = {
+    color: '#4FB8FF',
+    accessory: 'none',
+    eyeStyle: 'round',
+  },
 }) => {
   return (
     <motion.div
@@ -54,6 +66,70 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
         <path d="M80 30L90 50" stroke="#666" strokeWidth="2" />
         <path d="M120 30L110 50" stroke="#666" strokeWidth="2" />
 
+        {/* Accessory: Headphones */}
+        {settings.accessory === 'headphones' && (
+          <g>
+            <path
+              d="M45 100 Q45 40 100 40 Q155 40 155 100"
+              stroke="#333"
+              strokeWidth="8"
+              fill="none"
+            />
+            <rect
+              x="35"
+              y="90"
+              width="20"
+              height="30"
+              rx="10"
+              fill="#333"
+            />
+            <rect
+              x="145"
+              y="90"
+              width="20"
+              height="30"
+              rx="10"
+              fill="#333"
+            />
+          </g>
+        )}
+
+        {/* Accessory: Cap */}
+        {settings.accessory === 'cap' && (
+          <g transform="translate(0, -10)">
+            <path
+              d="M60 60 Q100 30 140 60"
+              fill={settings.color}
+              stroke="#333"
+              strokeWidth="2"
+            />
+            <path
+              d="M140 60 L170 80 L140 70 Z"
+              fill={settings.color}
+              stroke="#333"
+              strokeWidth="2"
+            />
+          </g>
+        )}
+
+        {/* Accessory: Bow */}
+        {settings.accessory === 'bow' && (
+          <g transform="translate(130, 50) rotate(15)">
+            <path
+              d="M-15 -10 L15 10 L-15 10 L15 -10 Z"
+              fill="#FF4785"
+              stroke="#333"
+              strokeWidth="2"
+            />
+            <circle
+              r="5"
+              fill="#FF4785"
+              stroke="#333"
+              strokeWidth="2"
+            />
+          </g>
+        )}
+
         {/* Body/Head */}
         <rect
           x="50"
@@ -61,7 +137,7 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
           width="100"
           height="90"
           rx="40"
-          fill="#4FB8FF"
+          fill={settings.color}
         />
         <rect
           x="60"
@@ -73,36 +149,80 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
         />
 
         {/* Eyes */}
-        <motion.circle
-          cx="85"
-          cy="85"
-          r="8"
-          fill="#FFF"
-          animate={{
-            scaleY: isSpeaking ? [1, 0.2, 1] : 1,
-            translateY: isSpeaking ? [0, 2, 0] : 0,
-          }}
-          transition={{
-            duration: 0.15,
-            repeat: isSpeaking ? Infinity : 0,
-            repeatDelay: 0.5,
-          }}
-        />
-        <motion.circle
-          cx="115"
-          cy="85"
-          r="8"
-          fill="#FFF"
-          animate={{
-            scaleY: isSpeaking ? [1, 0.2, 1] : 1,
-            translateY: isSpeaking ? [0, 2, 0] : 0,
-          }}
-          transition={{
-            duration: 0.15,
-            repeat: isSpeaking ? Infinity : 0,
-            repeatDelay: 0.5,
-          }}
-        />
+        <g>
+          {settings.eyeStyle === 'round' && (
+            <>
+              <motion.circle
+                cx="85"
+                cy="85"
+                r="8"
+                fill="#FFF"
+                animate={{
+                  scaleY: isSpeaking ? [1, 0.2, 1] : 1,
+                  translateY: isSpeaking ? [0, 2, 0] : 0,
+                }}
+                transition={{
+                  duration: 0.15,
+                  repeat: isSpeaking ? Infinity : 0,
+                  repeatDelay: 0.5,
+                }}
+              />
+              <motion.circle
+                cx="115"
+                cy="85"
+                r="8"
+                fill="#FFF"
+                animate={{
+                  scaleY: isSpeaking ? [1, 0.2, 1] : 1,
+                  translateY: isSpeaking ? [0, 2, 0] : 0,
+                }}
+                transition={{
+                  duration: 0.15,
+                  repeat: isSpeaking ? Infinity : 0,
+                  repeatDelay: 0.5,
+                }}
+              />
+            </>
+          )}
+
+          {settings.eyeStyle === 'star' && (
+            <>
+              <motion.path
+                d="M85 75 L87 82 L95 82 L89 87 L91 95 L85 90 L79 95 L81 87 L75 82 L83 82 Z"
+                fill="#FFF"
+                animate={{ rotate: isSpeaking ? [0, 360] : 0 }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              />
+              <motion.path
+                d="M115 75 L117 82 L125 82 L119 87 L121 95 L115 90 L109 95 L111 87 L105 82 L113 82 Z"
+                fill="#FFF"
+                animate={{ rotate: isSpeaking ? [0, 360] : 0 }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              />
+            </>
+          )}
+
+          {settings.eyeStyle === 'wink' && (
+            <>
+              <motion.circle cx="85" cy="85" r="8" fill="#FFF" />
+              <motion.path
+                d="M105 85 Q115 95 125 85"
+                stroke="#FFF"
+                strokeWidth="4"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </>
+          )}
+        </g>
 
         {/* Mouth */}
         <motion.path
@@ -129,14 +249,14 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
         {/* Hands */}
         <motion.path
           d="M40 100 Q30 110 45 120"
-          stroke="#4FB8FF"
+          stroke={settings.color}
           strokeWidth="8"
           strokeLinecap="round"
           animate={{ rotate: isPlaying ? [0, -20, 0] : 0 }}
         />
         <motion.path
           d="M160 100 Q170 110 155 120"
-          stroke="#4FB8FF"
+          stroke={settings.color}
           strokeWidth="8"
           strokeLinecap="round"
           animate={{ rotate: isPlaying ? [0, 20, 0] : 0 }}
