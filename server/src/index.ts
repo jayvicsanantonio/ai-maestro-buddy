@@ -38,6 +38,7 @@ class Store {
         createdAt: new Date().toISOString(),
         skill: { tempo_stability: 0.5, confidence: 0.1 },
         preferences: { coach_style: 'encouraging', difficulty: 1 },
+        onboardingCompleted: false,
         character: {
           color: '#4FB8FF',
           accessory: 'none',

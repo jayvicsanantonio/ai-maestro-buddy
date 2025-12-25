@@ -27,7 +27,7 @@ interface RhythmExercise {
   instructions: string;
 }
 
-interface SessionData {
+export interface SessionData {
   sessionId: string;
   uid: string;
   student: {
@@ -39,9 +39,15 @@ interface SessionData {
   };
 }
 
-export const RhythmQuest: React.FC<{
+interface RhythmQuestProps {
   onLog: (log: Omit<ToolLog, 'id' | 'timestamp'>) => void;
-}> = ({ onLog }) => {
+  initialSession?: SessionData;
+}
+
+export const RhythmQuest: React.FC<RhythmQuestProps> = ({
+  onLog,
+  initialSession,
+}) => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [bpm, setBpm] = useState(80);
   const [peaks, setPeaks] = useState<
@@ -61,7 +67,9 @@ export const RhythmQuest: React.FC<{
   >([]);
   const [showCreator, setShowCreator] = useState(false);
   const [characterSettings, setCharacterSettings] =
-    useState<CharacterSettings | null>(null);
+    useState<CharacterSettings | null>(
+      initialSession?.student.character || null
+    );
 
   // Speak feedback when it changes
   useEffect(() => {
@@ -78,18 +86,27 @@ export const RhythmQuest: React.FC<{
   useEffect(() => {
     const initSession = async () => {
       try {
-        const storedUid = localStorage.getItem('maestro_uid');
-        const res = await fetch(
-          'http://localhost:3001/api/session/start',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid: storedUid }),
-          }
-        );
-        const data = await res.json();
-        setSession(data);
-        setCharacterSettings(data.student.character);
+        let data: SessionData;
+
+        if (initialSession && !session) {
+          data = initialSession;
+          setSession(data);
+          setCharacterSettings(data.student.character);
+        } else {
+          const storedUid = localStorage.getItem('maestro_uid');
+          const res = await fetch(
+            'http://localhost:3001/api/session/start',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uid: storedUid }),
+            }
+          );
+          data = await res.json();
+          setSession(data);
+          setCharacterSettings(data.student.character);
+        }
+
         localStorage.setItem('maestro_uid', data.uid);
 
         // Connect WebSocket
@@ -105,6 +122,7 @@ export const RhythmQuest: React.FC<{
           );
           setIsConnecting(false);
         };
+        // ... rest of ws logic same ...
 
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
@@ -144,7 +162,7 @@ export const RhythmQuest: React.FC<{
 
     initSession();
     return () => wsRef.current?.close();
-  }, [onLog]);
+  }, [onLog, initialSession, session]);
 
   const onPeak = useCallback(
     (time: number) => {
@@ -231,17 +249,13 @@ export const RhythmQuest: React.FC<{
     );
   }
 
-  if (showCreator || !characterSettings) {
+  if (showCreator) {
     return (
       <div className="creator-view">
         <CharacterCreator
           initialSettings={characterSettings || undefined}
           onSave={handleSaveCharacter}
-          onCancel={
-            characterSettings
-              ? () => setShowCreator(false)
-              : undefined
-          }
+          onCancel={() => setShowCreator(false)}
         />
       </div>
     );
@@ -274,7 +288,7 @@ export const RhythmQuest: React.FC<{
           <MaestroCharacter
             isSpeaking={isSpeaking}
             isPlaying={isPlaying}
-            settings={characterSettings}
+            settings={characterSettings || undefined}
           />
           {!isPlaying && (
             <button

@@ -1,13 +1,22 @@
-import { useRef, useCallback } from 'react';
-import { RhythmQuest } from './components/RhythmQuest/RhythmQuest';
+import { useRef, useCallback, useState, useEffect } from 'react';
+import {
+  RhythmQuest,
+  type SessionData,
+} from './components/RhythmQuest/RhythmQuest';
+import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
+import { type CharacterSettings } from './components/MaestroCharacter/MaestroCharacter';
 import {
   DeveloperHUD,
   type DeveloperHUDHandle,
   type ToolLog,
 } from './components/HUD/DeveloperHUD';
+import { RefreshCw } from 'lucide-react';
 
 function App() {
   const hudRef = useRef<DeveloperHUDHandle>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const handleLog = useCallback(
     (log: Omit<ToolLog, 'id' | 'timestamp'>) => {
@@ -16,12 +25,87 @@ function App() {
     []
   );
 
+  const initSession = useCallback(async () => {
+    try {
+      const storedUid = localStorage.getItem('maestro_uid');
+      const res = await fetch(
+        'http://localhost:3001/api/session/start',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid: storedUid }),
+        }
+      );
+      const data = await res.json();
+      setSession(data);
+      localStorage.setItem('maestro_uid', data.uid);
+
+      if (!data.student.onboardingCompleted) {
+        setShowOnboarding(true);
+      }
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Failed to init session:', err);
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    initSession();
+  }, [initSession]);
+
+  const handleOnboardingComplete = async (
+    settings: CharacterSettings
+  ) => {
+    if (!session) return;
+    try {
+      await fetch('http://localhost:3001/api/student/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: session.uid,
+          character: settings,
+          onboardingCompleted: true,
+        }),
+      });
+
+      // Refresh session to get updated data
+      await initSession();
+      setShowOnboarding(false);
+    } catch (err) {
+      console.error('Failed to complete onboarding:', err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <RefreshCw className="spin" size={48} />
+        <p>Loading your musical world...</p>
+        <style>{`
+          .loading-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #2d1b4e;
+            color: white;
+            gap: 1.5rem;
+          }
+          .spin { animation: spin 2s linear infinite; color: #ffce00; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="app-layout">
       <div className="bg-gradient" />
 
       {/* Decorative Musical Notes */}
-      <div className="decorations">
+      <div className="decorations" aria-hidden="true">
         <div className="note n1">♪</div>
         <div className="note n2">♫</div>
         <div className="note n3">♬</div>
@@ -35,7 +119,15 @@ function App() {
       </header>
 
       <div className="content-wrapper">
-        <RhythmQuest onLog={handleLog} />
+        {showOnboarding ? (
+          <OnboardingFlow onComplete={handleOnboardingComplete} />
+        ) : (
+          <RhythmQuest
+            onLog={handleLog}
+            key={session?.sessionId}
+            initialSession={session || undefined}
+          />
+        )}
       </div>
 
       <DeveloperHUD ref={hudRef} />
@@ -107,7 +199,6 @@ function App() {
           z-index: 1;
         }
 
-        /* Decorative Notes */
         .decorations {
           position: fixed;
           top: 0;
@@ -136,7 +227,6 @@ function App() {
           50% { transform: translateY(-30px) rotate(20deg); }
         }
 
-        /* Prevent text selection during practice */
         * {
           user-select: none;
         }
