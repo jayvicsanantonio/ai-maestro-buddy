@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 import { type CharacterSettings } from '../MaestroCharacter/MaestroCharacter';
+import { MaestroGuide } from '../MaestroCharacter/MaestroGuide';
 import { Music, Sparkles, Rocket, ArrowRight } from 'lucide-react';
 
 interface OnboardingFlowProps {
@@ -34,127 +35,152 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     else if (step === 'ready') onComplete(characterSettings);
   };
 
+  const getStepText = (s: OnboardingStep): string => {
+    switch (s) {
+      case 'splash':
+        return "Welcome to MaestroBuddy! Your magical music adventure awaits. Let's start!";
+      case 'intro':
+        return "Hi there! I'm so excited to be your music teacher. We're going to explore the world of rhythm together! But first, let's get you ready for the quest.";
+      case 'character':
+        return 'How do I look? You can change my color and give me some cool accessories!';
+      case 'tutorial':
+        return "To play, first listen to my beat, then clap or tap along when you feel the rhythm. You'll earn cool badges as you get better!";
+      case 'ready':
+        return "You're ready! Your journey starts now. Let's make some music!";
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="onboarding-overlay">
-      <AnimatePresence mode="wait">
-        {step === 'splash' && (
-          <motion.div
-            key="splash"
-            className="onboarding-card splash-screen"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-          >
-            <div className="splash-logo">
-              <Music size={80} className="floating-icon" />
-              <h1>
-                Maestro<span className="accent">Buddy</span>
-              </h1>
-            </div>
-            <p className="splash-tagline">
-              Your Magical Music Adventure Awaits!
-            </p>
-            <button
-              className="onboarding-primary-button pulse"
-              onClick={nextStep}
-            >
-              <Rocket size={24} />
-              <span>Let's Start!</span>
-            </button>
-          </motion.div>
-        )}
+      <div className="onboarding-container">
+        <MaestroGuide
+          text={getStepText(step)}
+          settings={characterSettings}
+          className="onboarding-guide"
+        />
 
-        {step === 'intro' && (
-          <motion.div
-            key="intro"
-            className="onboarding-card intro-screen"
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -100, opacity: 0 }}
-          >
-            <Sparkles size={60} color="var(--primary)" />
-            <h2>Hi there!</h2>
-            <p>
-              I'm so excited to be your music teacher. We're going to
-              explore the world of rhythm together!
-            </p>
-            <p className="sub-text">
-              But first, let's get you ready for the quest...
-            </p>
-            <button
-              className="onboarding-primary-button"
-              onClick={nextStep}
+        <AnimatePresence mode="wait">
+          {step === 'splash' && (
+            <motion.div
+              key="splash"
+              className="onboarding-card splash-screen"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
             >
-              <span>Next</span>
-              <ArrowRight size={24} />
-            </button>
-          </motion.div>
-        )}
+              <div className="splash-logo">
+                <Music size={80} className="floating-icon" />
+                <h1>
+                  Maestro<span className="accent">Buddy</span>
+                </h1>
+              </div>
+              <p className="splash-tagline">
+                Your Magical Music Adventure Awaits!
+              </p>
+              <button
+                className="onboarding-primary-button pulse"
+                onClick={nextStep}
+              >
+                <Rocket size={24} />
+                <span>Let's Start!</span>
+              </button>
+            </motion.div>
+          )}
 
-        {step === 'character' && (
-          <motion.div
-            key="character"
-            className="onboarding-card-full"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-          >
-            <div className="creator-wrapper">
-              <CharacterCreator
-                initialSettings={characterSettings}
-                onSave={(settings) => {
-                  setCharacterSettings(settings);
-                  nextStep();
-                }}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'tutorial' && (
-          <motion.div
-            key="tutorial"
-            className="onboarding-card tutorial-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="tutorial-visual">
-              <div className="wave-icon">🔊</div>
-            </div>
-            <h2>How to Play</h2>
-            <p>1. Listen to my beat!</p>
-            <p>2. Clap or tap along when you feel the rhythm.</p>
-            <p>3. Earn cool badges as you get better!</p>
-            <button
-              className="onboarding-primary-button"
-              onClick={nextStep}
+          {step === 'intro' && (
+            <motion.div
+              key="intro"
+              className="onboarding-card intro-screen"
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
             >
-              <span>Got it!</span>
-              <Check size={24} />
-            </button>
-          </motion.div>
-        )}
+              <Sparkles size={60} color="var(--primary)" />
+              <h2>Hi there!</h2>
+              <p>
+                I'm so excited to be your music teacher. We're going
+                to explore the world of rhythm together!
+              </p>
+              <p className="sub-text">
+                But first, let's get you ready for the quest...
+              </p>
+              <button
+                className="onboarding-primary-button"
+                onClick={nextStep}
+              >
+                <span>Next</span>
+                <ArrowRight size={24} />
+              </button>
+            </motion.div>
+          )}
 
-        {step === 'ready' && (
-          <motion.div
-            key="ready"
-            className="onboarding-card ready-screen"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <div className="party-popper">🎉</div>
-            <h2>You're Ready!</h2>
-            <p>Your journey starts now. Let's make some music!</p>
-            <button
-              className="onboarding-primary-button big"
-              onClick={nextStep}
+          {step === 'character' && (
+            <motion.div
+              key="character"
+              className="onboarding-card-full"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -100, opacity: 0 }}
             >
-              <span>Enter the World</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <div className="creator-wrapper">
+                <CharacterCreator
+                  initialSettings={characterSettings}
+                  onSave={(settings) => {
+                    setCharacterSettings(settings);
+                    nextStep();
+                  }}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'tutorial' && (
+            <motion.div
+              key="tutorial"
+              className="onboarding-card tutorial-screen"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="tutorial-visual">
+                <div className="wave-icon">🔊</div>
+              </div>
+              <h2>How to Play</h2>
+              <p>1. Listen to my beat!</p>
+              <p>2. Clap or tap along when you feel the rhythm.</p>
+              <p>3. Earn cool badges as you get better!</p>
+              <button
+                className="onboarding-primary-button"
+                onClick={nextStep}
+              >
+                <span>Got it!</span>
+                <Check size={24} />
+              </button>
+            </motion.div>
+          )}
+
+          {step === 'ready' && (
+            <motion.div
+              key="ready"
+              className="onboarding-card ready-screen"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+            >
+              <div className="party-popper">🎉</div>
+              <h2>You're Ready!</h2>
+              <p>Your journey starts now. Let's make some music!</p>
+              <button
+                className="onboarding-primary-button big"
+                onClick={nextStep}
+              >
+                <span>Enter the World</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <style>{`
         .onboarding-overlay {
@@ -166,10 +192,24 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           background: var(--bg-dark);
           z-index: 1000;
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
           padding: 2rem;
           overflow-y: auto;
+        }
+
+        .onboarding-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3rem;
+          width: 100%;
+          max-width: 800px;
+          padding: 2rem 0;
+        }
+
+        .onboarding-guide {
+          margin-bottom: 1rem;
         }
 
         .onboarding-card {
@@ -185,6 +225,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           align-items: center;
           gap: 2rem;
           backdrop-filter: blur(20px);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
 
         .onboarding-card-full {

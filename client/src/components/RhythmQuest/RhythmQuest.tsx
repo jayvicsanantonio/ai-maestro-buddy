@@ -8,13 +8,10 @@ import {
   Star,
 } from 'lucide-react';
 import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
-import { useSpeech } from '../../hooks/useSpeech';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type ToolLog } from '../HUD/DeveloperHUD';
-import {
-  MaestroCharacter,
-  type CharacterSettings,
-} from '../MaestroCharacter/MaestroCharacter';
+import { MaestroGuide } from '../MaestroCharacter/MaestroGuide';
+import { type CharacterSettings } from '../MaestroCharacter/MaestroCharacter';
 import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 
 interface RhythmExercise {
@@ -57,7 +54,6 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
   const [feedback, setFeedback] = useState(
     "Tap 'Start Lesson' to begin!"
   );
-  const { speak, isSpeaking } = useSpeech();
   const [isConnecting, setIsConnecting] = useState(true);
   const [connectionError, setConnectionError] = useState<
     string | null
@@ -70,13 +66,6 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
     useState<CharacterSettings | null>(
       initialSession?.student.character || null
     );
-
-  // Speak feedback when it changes
-  useEffect(() => {
-    if (feedback && feedback !== "Tap 'Start Lesson' to begin!") {
-      speak(feedback);
-    }
-  }, [feedback, speak]);
 
   const questIdCounter = useRef(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -269,24 +258,9 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
           <span>Rhythm Quest</span>
         </div>
         <h1>Feel the Beat</h1>
-        <motion.p
-          className="feedback-text"
-          animate={{
-            scale: isSpeaking ? [1, 1.05, 1] : 1,
-            color: isSpeaking ? 'var(--primary)' : '#ffffff',
-          }}
-          transition={{
-            scale: isSpeaking
-              ? { repeat: Infinity, duration: 1.5 }
-              : { duration: 0.3 },
-          }}
-        >
-          {feedback}
-        </motion.p>
-
         <div className="character-zone">
-          <MaestroCharacter
-            isSpeaking={isSpeaking}
+          <MaestroGuide
+            text={feedback}
             isPlaying={isPlaying}
             settings={characterSettings || undefined}
           />
