@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   MaestroCharacter,
   type CharacterSettings,
+  type CharacterMood,
 } from './MaestroCharacter';
 import { useSpeech } from '../../hooks/useSpeech';
 
@@ -10,6 +11,7 @@ interface MaestroGuideProps {
   text: string;
   isPlaying?: boolean;
   settings?: CharacterSettings;
+  mood?: CharacterMood;
   className?: string;
 }
 
@@ -17,6 +19,7 @@ export const MaestroGuide: React.FC<MaestroGuideProps> = ({
   text,
   isPlaying = false,
   settings,
+  mood = 'neutral',
   className = '',
 }) => {
   const { speak, isSpeaking } = useSpeech();
@@ -35,6 +38,7 @@ export const MaestroGuide: React.FC<MaestroGuideProps> = ({
             isSpeaking={isSpeaking}
             isPlaying={isPlaying}
             settings={settings}
+            mood={mood}
           />
         </div>
 

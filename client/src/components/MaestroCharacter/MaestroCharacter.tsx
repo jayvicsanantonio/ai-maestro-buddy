@@ -7,10 +7,18 @@ export interface CharacterSettings {
   eyeStyle: 'round' | 'star' | 'wink';
 }
 
+export type CharacterMood =
+  | 'happy'
+  | 'neutral'
+  | 'surprised'
+  | 'celebrating'
+  | 'focused';
+
 interface MaestroCharacterProps {
   isSpeaking: boolean;
   isPlaying: boolean;
   settings?: CharacterSettings;
+  mood?: CharacterMood;
 }
 
 export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
@@ -21,12 +29,17 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
     accessory: 'none',
     eyeStyle: 'round',
   },
+  mood = 'neutral',
 }) => {
+  const isExcited = mood === 'happy' || mood === 'celebrating';
+
   return (
     <motion.div
       className="maestro-character"
       animate={{
         y: isPlaying ? [0, -10, 0] : [0, -5, 0],
+        rotate: mood === 'celebrating' ? [0, -5, 5, -5, 0] : 0,
+        scale: mood === 'surprised' ? [1, 1.1, 1] : 1,
       }}
       transition={{
         duration: isPlaying ? 0.5 : 2,
@@ -53,15 +66,19 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
           cx="80"
           cy="30"
           r="4"
-          fill="#FFD700"
-          animate={{ scale: isSpeaking ? [1, 1.5, 1] : 1 }}
+          fill={isExcited ? '#FF4785' : '#FFD700'}
+          animate={{
+            scale: isSpeaking || isExcited ? [1, 1.5, 1] : 1,
+          }}
         />
         <motion.circle
           cx="120"
           cy="30"
           r="4"
-          fill="#FFD700"
-          animate={{ scale: isSpeaking ? [1, 1.5, 1] : 1 }}
+          fill={isExcited ? '#FF4785' : '#FFD700'}
+          animate={{
+            scale: isSpeaking || isExcited ? [1, 1.5, 1] : 1,
+          }}
         />
         <path d="M80 30L90 50" stroke="#666" strokeWidth="2" />
         <path d="M120 30L110 50" stroke="#666" strokeWidth="2" />
@@ -131,13 +148,18 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
         )}
 
         {/* Body/Head */}
-        <rect
+        <motion.rect
           x="50"
           y="50"
           width="100"
           height="90"
           rx="40"
           fill={settings.color}
+          animate={{
+            fill: mood === 'focused' ? '#2D1B4E' : settings.color,
+            stroke: mood === 'focused' ? settings.color : 'none',
+            strokeWidth: mood === 'focused' ? 4 : 0,
+          }}
         />
         <rect
           x="60"
@@ -150,100 +172,104 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
 
         {/* Eyes */}
         <g>
-          {settings.eyeStyle === 'round' && (
+          {(settings.eyeStyle === 'round' ||
+            mood === 'surprised' ||
+            mood === 'focused') && (
             <>
               <motion.circle
                 cx="85"
                 cy="85"
-                r="8"
+                r={mood === 'surprised' ? 12 : 8}
                 fill="#FFF"
                 animate={{
-                  scaleY: isSpeaking ? [1, 0.2, 1] : 1,
-                  translateY: isSpeaking ? [0, 2, 0] : 0,
-                }}
-                transition={{
-                  duration: 0.15,
-                  repeat: isSpeaking ? Infinity : 0,
-                  repeatDelay: 0.5,
+                  scaleY:
+                    mood === 'focused'
+                      ? 0.2
+                      : isSpeaking
+                      ? [1, 0.2, 1]
+                      : 1,
                 }}
               />
               <motion.circle
                 cx="115"
                 cy="85"
-                r="8"
+                r={mood === 'surprised' ? 12 : 8}
                 fill="#FFF"
                 animate={{
-                  scaleY: isSpeaking ? [1, 0.2, 1] : 1,
-                  translateY: isSpeaking ? [0, 2, 0] : 0,
-                }}
-                transition={{
-                  duration: 0.15,
-                  repeat: isSpeaking ? Infinity : 0,
-                  repeatDelay: 0.5,
-                }}
-              />
-            </>
-          )}
-
-          {settings.eyeStyle === 'star' && (
-            <>
-              <motion.path
-                d="M85 75 L87 82 L95 82 L89 87 L91 95 L85 90 L79 95 L81 87 L75 82 L83 82 Z"
-                fill="#FFF"
-                animate={{ rotate: isSpeaking ? [0, 360] : 0 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'linear',
-                }}
-              />
-              <motion.path
-                d="M115 75 L117 82 L125 82 L119 87 L121 95 L115 90 L109 95 L111 87 L105 82 L113 82 Z"
-                fill="#FFF"
-                animate={{ rotate: isSpeaking ? [0, 360] : 0 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'linear',
+                  scaleY:
+                    mood === 'focused'
+                      ? 0.2
+                      : isSpeaking
+                      ? [1, 0.2, 1]
+                      : 1,
                 }}
               />
             </>
           )}
 
-          {settings.eyeStyle === 'wink' && (
-            <>
-              <motion.circle cx="85" cy="85" r="8" fill="#FFF" />
-              <motion.path
-                d="M105 85 Q115 95 125 85"
-                stroke="#FFF"
-                strokeWidth="4"
-                strokeLinecap="round"
-                fill="none"
-              />
-            </>
-          )}
+          {settings.eyeStyle === 'star' &&
+            mood !== 'surprised' &&
+            mood !== 'focused' && (
+              <>
+                <motion.path
+                  d="M85 75 L87 82 L95 82 L89 87 L91 95 L85 90 L79 95 L81 87 L75 82 L83 82 Z"
+                  fill="#FFF"
+                  animate={{
+                    rotate: isSpeaking || isExcited ? [0, 360] : 0,
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                />
+                <motion.path
+                  d="M115 75 L117 82 L125 82 L119 87 L121 95 L115 90 L109 95 L111 87 L105 82 L113 82 Z"
+                  fill="#FFF"
+                  animate={{
+                    rotate: isSpeaking || isExcited ? [0, 360] : 0,
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                />
+              </>
+            )}
+
+          {settings.eyeStyle === 'wink' &&
+            mood !== 'surprised' &&
+            mood !== 'focused' && (
+              <>
+                <motion.circle cx="85" cy="85" r="8" fill="#FFF" />
+                <motion.path
+                  d="M105 85 Q115 95 125 85"
+                  stroke="#FFF"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </>
+            )}
         </g>
 
         {/* Mouth */}
         <motion.path
           d={
-            isSpeaking
-              ? 'M85 115 Q100 130 115 115'
+            isExcited || isSpeaking
+              ? 'M85 115 Q100 135 115 115'
+              : mood === 'surprised'
+              ? 'M90 125 A10 10 0 1 0 110 125 A10 10 0 1 0 90 125'
               : 'M85 115 Q100 120 115 115'
           }
-          stroke="#FFF"
+          stroke={mood === 'surprised' ? 'none' : '#FFF'}
+          fill={mood === 'surprised' ? '#FFF' : 'none'}
           strokeWidth="4"
           strokeLinecap="round"
           animate={{
-            d: isSpeaking
-              ? [
-                  'M85 115 Q100 135 115 115',
-                  'M85 120 Q100 125 115 120',
-                  'M85 115 Q100 135 115 115',
-                ]
-              : 'M85 115 Q100 120 115 115',
+            y: mood === 'celebrating' ? [0, -5, 0] : 0,
           }}
-          transition={{ duration: 0.3, repeat: Infinity }}
         />
 
         {/* Hands */}
@@ -252,14 +278,30 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
           stroke={settings.color}
           strokeWidth="8"
           strokeLinecap="round"
-          animate={{ rotate: isPlaying ? [0, -20, 0] : 0 }}
+          animate={{
+            rotate:
+              mood === 'celebrating'
+                ? [0, -40, 0]
+                : isPlaying
+                ? [0, -20, 0]
+                : 0,
+          }}
+          transition={{ duration: 0.3, repeat: Infinity }}
         />
         <motion.path
           d="M160 100 Q170 110 155 120"
           stroke={settings.color}
           strokeWidth="8"
           strokeLinecap="round"
-          animate={{ rotate: isPlaying ? [0, 20, 0] : 0 }}
+          animate={{
+            rotate:
+              mood === 'celebrating'
+                ? [0, 40, 0]
+                : isPlaying
+                ? [0, 20, 0]
+                : 0,
+          }}
+          transition={{ duration: 0.3, repeat: Infinity }}
         />
       </svg>
     </motion.div>

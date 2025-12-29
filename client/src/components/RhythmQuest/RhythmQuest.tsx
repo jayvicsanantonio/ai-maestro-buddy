@@ -11,8 +11,14 @@ import { useAudioAnalyzer } from '../../hooks/useAudioAnalyzer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type ToolLog } from '../HUD/DeveloperHUD';
 import { MaestroGuide } from '../MaestroCharacter/MaestroGuide';
-import { type CharacterSettings } from '../MaestroCharacter/MaestroCharacter';
+import {
+  type CharacterSettings,
+  type CharacterMood,
+} from '../MaestroCharacter/MaestroCharacter';
 import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
+import { audioManager } from '../../utils/AudioManager';
+import { FeedbackPopup } from './FeedbackPopup';
+import { StickerBook } from '../Rewards/StickerBook';
 
 interface RhythmExercise {
   id: string;
@@ -66,6 +72,16 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
     useState<CharacterSettings | null>(
       initialSession?.student.character || null
     );
+  const [streak, setStreak] = useState(0);
+  const [activeFeedback, setActiveFeedback] = useState<{
+    id: number;
+    text: string;
+    type: 'perfect' | 'good' | 'off';
+  } | null>(null);
+  const [mood, setMood] = useState<CharacterMood>('neutral');
+  const [badges, setBadges] = useState<
+    { type: string; reason: string }[]
+  >([]);
 
   const questIdCounter = useRef(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -130,6 +146,10 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
                 setFeedback(
                   `🏆 BADGE EARNED: ${args.type}! ${args.reason}`
                 );
+                setBadges((prev) => [
+                  ...prev,
+                  { type: args.type, reason: args.reason },
+                ]);
               }
             }
 
@@ -164,6 +184,58 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
       const newPeak = { id: questIdCounter.current++, time, offset };
       setPeaks((prev) => [...prev.slice(-9), newPeak]);
 
+      // Streak and Feedback Logic
+      const absOffset = Math.abs(offset);
+      let hitType: 'perfect' | 'good' | 'off' = 'off';
+      let feedbackText = 'Keep trying!';
+      let nextStreak = streak;
+
+      if (absOffset < 0.05) {
+        hitType = 'perfect';
+        feedbackText = 'PERFECT!';
+        nextStreak = streak + 1;
+        setStreak(nextStreak);
+        audioManager.playHit(true);
+      } else if (absOffset < 0.15) {
+        hitType = 'good';
+        feedbackText = 'GREAT!';
+        nextStreak = streak + 1;
+        setStreak(nextStreak);
+        audioManager.playHit(false);
+      } else {
+        hitType = 'off';
+        feedbackText = 'WHOOPS!';
+        nextStreak = 0;
+        setStreak(0);
+        audioManager.playMiss();
+      }
+
+      // Mood Logic
+      if (hitType === 'off') {
+        setMood('focused');
+      } else if (nextStreak >= 10) {
+        setMood('celebrating');
+      } else if (nextStreak >= 5) {
+        setMood('happy');
+      } else if (hitType === 'perfect') {
+        setMood('surprised');
+        setTimeout(
+          () => setMood((m) => (m === 'surprised' ? 'neutral' : m)),
+          500
+        );
+      } else {
+        setMood('neutral');
+      }
+
+      setActiveFeedback({
+        id: Date.now(),
+        text:
+          nextStreak > 0 && hitType !== 'off'
+            ? `${feedbackText} x${nextStreak}`
+            : feedbackText,
+        type: hitType,
+      });
+
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(
           JSON.stringify({
@@ -174,7 +246,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         );
       }
     },
-    [bpm, session]
+    [bpm, session, streak]
   );
 
   const { startListening, stopListening } = useAudioAnalyzer(onPeak);
@@ -263,6 +335,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
             text={feedback}
             isPlaying={isPlaying}
             settings={characterSettings || undefined}
+            mood={mood}
           />
           {!isPlaying && (
             <button
@@ -308,6 +381,18 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
               />
             ))}
           </div>
+        </div>
+
+        <div className="feedback-layer">
+          <AnimatePresence>
+            {activeFeedback && (
+              <FeedbackPopup
+                key={activeFeedback.id}
+                text={activeFeedback.text}
+                type={activeFeedback.type}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="peak-history">
@@ -364,6 +449,10 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
             </div>
           </motion.div>
         )}
+
+        <div className="rewards-zone">
+          <StickerBook badges={badges} />
+        </div>
       </main>
 
       <footer className="quest-footer">
@@ -487,6 +576,16 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
           padding: 3rem;
           border-radius: 4rem;
           border: 2px dashed rgba(255, 255, 255, 0.1);
+          z-index: 10;
+        }
+
+        .feedback-layer {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+          z-index: 50;
         }
 
         .beaters {
@@ -662,6 +761,13 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         .edit-character-button:hover {
           background: rgba(255, 255, 255, 0.2);
           transform: translateY(-2px);
+        }
+
+        .rewards-zone {
+          margin-top: 2rem;
+          width: 100%;
+          display: flex;
+          justify-content: center;
         }
 
         .creator-view {
