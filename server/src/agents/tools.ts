@@ -77,4 +77,25 @@ export const ToolRegistry = {
       },
     },
   },
+  get_music_fact: {
+    description:
+      'Fetches a fun and educational music fact to share with the student.',
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {},
+    },
+  },
+  get_theory_lesson: {
+    description:
+      'Fetches a short music theory lesson on a specific topic (rhythm, tempo, dynamics, pitch).',
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        topic: {
+          type: SchemaType.STRING,
+          description: 'The theory topic to explain',
+        },
+      },
+    },
+  },
 };

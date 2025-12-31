@@ -80,6 +80,36 @@ app.post('/mcp/execute', (req, res) => {
     return res.json(filtered);
   }
 
+  if (tool === 'get_music_fact') {
+    const facts = [
+      'Did you know? The oldest known musical instrument is a flute made from a bird bone!',
+      'Fun Fact: A piano has 88 keys, but some special ones have more!',
+      "Did you know? Rhythm is the 'heartbeat' of music. Every song has one!",
+      'Cool Fact: Some animals, like birds and whales, sing songs just like humans do!',
+      'Did you know? Vibrations are what make sound. Feel your throat while you hum!',
+    ];
+    const randomIndex = Math.floor(Math.random() * facts.length);
+    return res.json({ fact: facts[randomIndex] });
+  }
+
+  if (tool === 'get_theory_lesson') {
+    const topic = args.topic || 'rhythm';
+    const lessons: Record<string, string> = {
+      rhythm:
+        'Rhythm is a pattern of sounds and silence. It tells us when to play and when to rest!',
+      tempo:
+        'Tempo is how fast or slow the music goes. It is like the speed limit for a song!',
+      dynamics:
+        'Dynamics tell us how loud or soft to play. Imagine a mouse whispering vs. a lion roaring!',
+      pitch:
+        'Pitch is how high or low a sound is. Like a squeaky mouse (high) or a grumbling bear (low)!',
+    };
+    return res.json({
+      topic,
+      lesson: lessons[topic] || lessons['rhythm'],
+    });
+  }
+
   res.status(404).json({ error: 'Tool not found' });
 });
 

@@ -24,6 +24,10 @@ export const StickerBook: React.FC<StickerBookProps> = ({
         return <Heart className="text-pink-400" />;
       case 'musical_ear':
         return <Music className="text-blue-400" />;
+      case 'music_scholar':
+        return <Star className="text-yellow-400" />;
+      case 'theory_wiz':
+        return <Award className="text-green-400" />;
       default:
         return <Star className="text-yellow-400" />;
     }
@@ -129,6 +133,7 @@ export const StickerBook: React.FC<StickerBookProps> = ({
         .text-purple-400 { color: #c084fc; }
         .text-pink-400 { color: #f472b6; }
         .text-blue-400 { color: #60a5fa; }
+        .text-green-400 { color: #4ade80; }
       `}</style>
     </div>
   );
