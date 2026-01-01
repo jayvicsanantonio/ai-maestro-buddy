@@ -19,6 +19,9 @@ import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 import { audioManager } from '../../utils/AudioManager';
 import { FeedbackPopup } from './FeedbackPopup';
 import { StickerBook } from '../Rewards/StickerBook';
+import { XPLayer } from '../HUD/XPLayer';
+import { BadgeReveal } from '../Rewards/BadgeReveal';
+import { FactCard } from '../HUD/FactCard';
 
 interface RhythmExercise {
   id: string;
@@ -82,6 +85,14 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
   const [badges, setBadges] = useState<
     { type: string; reason: string }[]
   >([]);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const xpToNextLevel = level * 100;
+  const [newBadgeToReveal, setNewBadgeToReveal] = useState<{
+    type: string;
+    reason: string;
+  } | null>(null);
+  const [currentFact, setCurrentFact] = useState<string | null>(null);
 
   const questIdCounter = useRef(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -150,6 +161,13 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
                   ...prev,
                   { type: args.type, reason: args.reason },
                 ]);
+                setNewBadgeToReveal({
+                  type: args.type,
+                  reason: args.reason,
+                });
+              }
+              if (tool === 'get_music_fact') {
+                setCurrentFact(msg.content);
               }
             }
 
@@ -210,6 +228,19 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         audioManager.playMiss();
       }
 
+      // XP Logic
+      if (hitType !== 'off') {
+        const gain = hitType === 'perfect' ? 10 : 5;
+        setXp((prev) => {
+          const next = prev + gain;
+          if (next >= xpToNextLevel) {
+            setLevel((l) => l + 1);
+            return next - xpToNextLevel;
+          }
+          return next;
+        });
+      }
+
       // Mood Logic
       if (hitType === 'off') {
         setMood('focused');
@@ -246,7 +277,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         );
       }
     },
-    [bpm, session, streak]
+    [bpm, session, streak, xpToNextLevel]
   );
 
   const { startListening, stopListening } = useAudioAnalyzer(onPeak);
@@ -334,6 +365,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
           <MaestroGuide
             text={feedback}
             isPlaying={isPlaying}
+            bpm={bpm}
             settings={characterSettings || undefined}
             mood={mood}
           />
@@ -451,11 +483,24 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         )}
 
         <div className="rewards-zone">
+          <XPLayer
+            xp={xp}
+            level={level}
+            xpToNextLevel={xpToNextLevel}
+          />
           <StickerBook badges={badges} />
         </div>
       </main>
 
       <footer className="quest-footer">
+        <BadgeReveal
+          badge={newBadgeToReveal}
+          onClose={() => setNewBadgeToReveal(null)}
+        />
+        <FactCard
+          fact={currentFact}
+          onClose={() => setCurrentFact(null)}
+        />
         <button
           className={`action-button ${isPlaying ? 'stop' : 'start'}`}
           onClick={toggleQuest}

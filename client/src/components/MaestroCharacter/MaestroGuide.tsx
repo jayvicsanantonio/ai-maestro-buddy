@@ -10,6 +10,7 @@ import { useSpeech } from '../../hooks/useSpeech';
 interface MaestroGuideProps {
   text: string;
   isPlaying?: boolean;
+  bpm?: number;
   settings?: CharacterSettings;
   mood?: CharacterMood;
   className?: string;
@@ -18,6 +19,7 @@ interface MaestroGuideProps {
 export const MaestroGuide: React.FC<MaestroGuideProps> = ({
   text,
   isPlaying = false,
+  bpm,
   settings,
   mood = 'neutral',
   className = '',
@@ -37,6 +39,7 @@ export const MaestroGuide: React.FC<MaestroGuideProps> = ({
           <MaestroCharacter
             isSpeaking={isSpeaking}
             isPlaying={isPlaying}
+            bpm={bpm}
             settings={settings}
             mood={mood}
           />

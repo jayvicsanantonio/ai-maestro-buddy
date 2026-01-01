@@ -17,6 +17,7 @@ export type CharacterMood =
 interface MaestroCharacterProps {
   isSpeaking: boolean;
   isPlaying: boolean;
+  bpm?: number;
   settings?: CharacterSettings;
   mood?: CharacterMood;
 }
@@ -24,6 +25,7 @@ interface MaestroCharacterProps {
 export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
   isSpeaking,
   isPlaying,
+  bpm = 120,
   settings = {
     color: '#4FB8FF',
     accessory: 'none',
@@ -37,14 +39,14 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
     <motion.div
       className="maestro-character"
       animate={{
-        y: isPlaying ? [0, -10, 0] : [0, -5, 0],
-        rotate: mood === 'celebrating' ? [0, -5, 5, -5, 0] : 0,
-        scale: mood === 'surprised' ? [1, 1.1, 1] : 1,
+        y: isPlaying ? [0, -15, 0] : [0, -5, 0],
+        rotate: mood === 'celebrating' ? [0, -10, 10, -10, 0] : 0,
+        scale: mood === 'surprised' ? [1, 1.2, 1] : 1,
       }}
       transition={{
-        duration: isPlaying ? 0.5 : 2,
+        duration: isPlaying ? 60 / bpm : 2,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: isPlaying ? 'backOut' : 'easeInOut',
       }}
       style={{
         width: '200px',
@@ -283,10 +285,15 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
               mood === 'celebrating'
                 ? [0, -40, 0]
                 : isPlaying
-                ? [0, -20, 0]
+                ? [0, -30, 0]
                 : 0,
+            y: isPlaying ? [0, -10, 0] : 0,
           }}
-          transition={{ duration: 0.3, repeat: Infinity }}
+          transition={{
+            duration: isPlaying ? 60 / bpm : 0.3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
         <motion.path
           d="M160 100 Q170 110 155 120"
@@ -298,10 +305,15 @@ export const MaestroCharacter: React.FC<MaestroCharacterProps> = ({
               mood === 'celebrating'
                 ? [0, 40, 0]
                 : isPlaying
-                ? [0, 20, 0]
+                ? [0, 30, 0]
                 : 0,
+            y: isPlaying ? [0, -10, 0] : 0,
           }}
-          transition={{ duration: 0.3, repeat: Infinity }}
+          transition={{
+            duration: isPlaying ? 60 / bpm : 0.3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
       </svg>
     </motion.div>

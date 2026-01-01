@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { SparkleBurst } from './SparkleBurst';
 
 interface FeedbackPopupProps {
   text: string;
@@ -36,6 +37,7 @@ export const FeedbackPopup: React.FC<FeedbackPopupProps> = ({
         fontFamily: "'Quicksand', sans-serif",
       }}
     >
+      <SparkleBurst type={type} />
       {text}
     </motion.div>
   );
