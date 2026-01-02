@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import {
-  MaestroCharacter,
-  type CharacterSettings,
-} from '../MaestroCharacter/MaestroCharacter';
+import { MaestroCharacter } from '../MaestroCharacter/MaestroCharacter';
+import type { CharacterSettings } from '../../types/shared';
 import { Palette, Crown, Eye, Check } from 'lucide-react';
 
 interface CharacterCreatorProps {

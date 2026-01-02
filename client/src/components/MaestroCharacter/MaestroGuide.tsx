@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MaestroCharacter,
-  type CharacterSettings,
   type CharacterMood,
 } from './MaestroCharacter';
+import type { CharacterSettings } from '../../types/shared';
 import { useSpeech } from '../../hooks/useSpeech';
 
 interface MaestroGuideProps {

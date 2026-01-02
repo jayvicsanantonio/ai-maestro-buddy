@@ -1,11 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export interface CharacterSettings {
-  color: string;
-  accessory: 'none' | 'headphones' | 'cap' | 'bow';
-  eyeStyle: 'round' | 'star' | 'wink';
-}
+import type { CharacterSettings } from '../../types/shared';
 
 export type CharacterMood =
   | 'happy'

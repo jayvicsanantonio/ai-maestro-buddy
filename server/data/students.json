@@ -1,0 +1,21 @@
+{
+  "guest-2c7ce91d": {
+    "uid": "guest-2c7ce91d",
+    "createdAt": "2026-01-02T06:15:47.886Z",
+    "onboardingCompleted": true,
+    "skill": {
+      "tempo_stability": 0.5,
+      "confidence": 0.1
+    },
+    "preferences": {
+      "coach_style": "encouraging",
+      "difficulty": 1
+    },
+    "character": {
+      "color": "#4FB8FF",
+      "accessory": "none",
+      "eyeStyle": "round"
+    },
+    "updatedAt": "2026-01-02T06:18:01.031Z"
+  }
+}

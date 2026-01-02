@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
-import { type CharacterSettings } from '../MaestroCharacter/MaestroCharacter';
+import type { CharacterSettings } from '../../types/shared';
 import { MaestroGuide } from '../MaestroCharacter/MaestroGuide';
 import { Music, Sparkles, Rocket, ArrowRight } from 'lucide-react';
 

@@ -1,10 +1,8 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
-import {
-  RhythmQuest,
-  type SessionData,
-} from './components/RhythmQuest/RhythmQuest';
+import { RhythmQuest } from './components/RhythmQuest/RhythmQuest';
+import type { SessionData } from './types/shared';
 import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
-import { type CharacterSettings } from './components/MaestroCharacter/MaestroCharacter';
+import type { CharacterSettings } from './types/shared';
 import {
   DeveloperHUD,
   type DeveloperHUDHandle,
@@ -25,17 +23,17 @@ function App() {
     []
   );
 
+  const API_URL =
+    import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
   const initSession = useCallback(async () => {
     try {
       const storedUid = localStorage.getItem('maestro_uid');
-      const res = await fetch(
-        'http://localhost:3001/api/session/start',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: storedUid }),
-        }
-      );
+      const res = await fetch(`${API_URL}/session/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: storedUid }),
+      });
       const data = await res.json();
       setSession(data);
       localStorage.setItem('maestro_uid', data.uid);
@@ -48,10 +46,10 @@ function App() {
       console.error('Failed to init session:', err);
       setIsLoading(false);
     }
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
-    initSession();
+    void initSession();
   }, [initSession]);
 
   const handleOnboardingComplete = async (
@@ -59,7 +57,7 @@ function App() {
   ) => {
     if (!session) return;
     try {
-      await fetch('http://localhost:3001/api/student/update', {
+      await fetch(`${API_URL}/student/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

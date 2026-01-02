@@ -6,9 +6,10 @@ import {
   type FunctionDeclaration,
 } from '@google-cloud/vertexai';
 import { ToolRegistry } from './tools.js';
+import { config } from '../config/env.js';
 
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
-const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+const PROJECT_ID = config.projectId;
+const LOCATION = config.location;
 
 const SYSTEM_PROMPT = `
 You are MaestroBuddy, a kind and patient music teacher for kids aged 6-12. 
