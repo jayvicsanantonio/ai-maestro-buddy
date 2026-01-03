@@ -6,7 +6,7 @@ import { FileStore } from './models/FileStore.js';
 import { createApiRouter } from './routes/api.js';
 import { SocketService } from './services/SocketService.js';
 
-const { app, getWss } = expressWs(express());
+const { app } = expressWs(express());
 
 // Initialize Core Services
 const store = new FileStore();
@@ -17,14 +17,14 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', server: 'BFF' });
 });
 
 app.use('/api', createApiRouter(store));
 
 // WebSocket
-app.ws('/api/session/stream', (ws, req) => {
+app.ws('/api/session/stream', (ws, _req) => {
   socketService.handleConnection(ws);
 });
 

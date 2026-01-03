@@ -27,7 +27,7 @@ export class FileStore implements IStore {
         );
         const students = JSON.parse(studentsData);
         this.studentsCache = new Map(Object.entries(students));
-      } catch (e) {
+      } catch {
         // File doesn't exist or invalid, start empty
         await this.saveStudents();
       }
@@ -39,7 +39,7 @@ export class FileStore implements IStore {
         );
         const sessions = JSON.parse(sessionsData);
         this.sessionsCache = new Map(Object.entries(sessions));
-      } catch (e) {
+      } catch {
         await this.saveSessions();
       }
 

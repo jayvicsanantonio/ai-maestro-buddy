@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "concurrently -k -p \"[{name}]\" -n \"client,server,mcp\" -c \"cyan.bold,green.bold,yellow.bold\" \"pnpm --filter client dev\" \"pnpm --filter server dev\" \"pnpm --filter mcp-gateway dev\"",
     "install-all": "pnpm install",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
   },
   "keywords": [
     "ai",

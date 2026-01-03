@@ -1,4 +1,4 @@
-import type { SessionData, StudentProfile } from '../types/shared.js';
+import type { StudentProfile } from '../types/shared.js';
 
 export interface IStore {
   getStudent(uid: string): Promise<StudentProfile>;
