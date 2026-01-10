@@ -1,37 +1,29 @@
 import { Router } from 'express';
 import { SessionController } from '../controllers/SessionController.js';
 import { StudentController } from '../controllers/StudentController.js';
-import { ttsService } from '../services/TTSService.js';
-import { FileStore } from '../models/FileStore.js';
+import { TTSController } from '../controllers/TTSController.js';
+import type { FileStore } from '../models/FileStore.js';
 
-export const createApiRouter = (store: FileStore) => {
+/**
+ * Creates the main API router with all endpoints.
+ * @param store - The data store instance for persistence
+ */
+export const createApiRouter = (store: FileStore): Router => {
   const router = Router();
+
+  // Controllers
   const sessionController = new SessionController(store);
   const studentController = new StudentController(store);
+  const ttsController = new TTSController();
 
-  // Session
+  // Session endpoints
   router.post('/session/start', sessionController.startSession);
 
-  // Student
+  // Student endpoints
   router.post('/student/update', studentController.updateProfile);
 
-  // TTS
-  router.post('/tts', async (req, res) => {
-    const { text } = req.body;
-    if (!text) {
-      res.status(400).json({ error: 'Text is required' });
-      return;
-    }
-
-    const audio = await ttsService.synthesize(text);
-    if (!audio) {
-      res.status(500).json({ error: 'Voice synthesis failed' });
-      return;
-    }
-
-    res.set('Content-Type', 'audio/mpeg');
-    res.send(Buffer.from(audio));
-  });
+  // TTS endpoints
+  router.post('/tts', ttsController.synthesize);
 
   return router;
 };

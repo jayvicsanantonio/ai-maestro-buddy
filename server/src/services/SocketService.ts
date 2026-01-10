@@ -1,10 +1,11 @@
 import type { WebSocket } from 'ws';
-import { GeminiCoach } from '../agents/GeminiCoach.js';
-import { FileStore } from '../models/FileStore.js';
+import type { FileStore } from '../models/FileStore.js';
+import { getHandler, type MessageContext } from './handlers/index.js';
 
-const MCP_GATEWAY_URL =
-  process.env.MCP_GATEWAY_URL || 'http://localhost:3002/mcp/execute';
-
+/**
+ * WebSocket service for handling real-time session communication.
+ * Uses a handler registry pattern for message processing.
+ */
 export class SocketService {
   private store: FileStore;
 
@@ -12,87 +13,30 @@ export class SocketService {
     this.store = store;
   }
 
-  handleConnection(ws: WebSocket) {
+  /**
+   * Handles a new WebSocket connection.
+   * Sets up message handling and cleanup on close.
+   */
+  handleConnection(ws: WebSocket): void {
     console.log('New WebSocket connection');
-    let currentSessionId: string | null = null;
-    let coach: GeminiCoach | null = null;
-    let metricsBuffer: any[] = [];
+
+    // Initialize connection context
+    let ctx: MessageContext = {
+      ws,
+      sessionId: null,
+      coach: null,
+      metricsBuffer: [],
+    };
 
     ws.on('message', async (msg: string) => {
       try {
         const data = JSON.parse(msg);
+        const handler = getHandler(data.type);
 
-        if (data.type === 'auth') {
-          currentSessionId = data.sessionId;
-          coach = new GeminiCoach();
-          console.log(
-            `WebSocket authenticated for session: ${currentSessionId}`
-          );
-
-          ws.send(
-            JSON.stringify({
-              type: 'system',
-              content: 'Connection ready',
-            })
-          );
-          return;
-        }
-
-        if (data.type === 'metrics') {
-          metricsBuffer.push(data.metrics);
-
-          // Process every 5 metrics
-          if (metricsBuffer.length >= 5 && coach) {
-            console.log(
-              `Processing metrics window for ${currentSessionId}`
-            );
-
-            // AI Processing
-            const { feedback, toolTrace } =
-              await coach.processMetrics(metricsBuffer);
-
-            const responsePayload: any = {
-              type: 'feedback',
-              content: feedback,
-              toolTrace,
-            };
-
-            // Tool Execution Handling
-            if (toolTrace && toolTrace.status === 'success') {
-              const { tool, args } = toolTrace;
-
-              // MCP Calls
-              if (tool === 'get_rhythm_exercises') {
-                try {
-                  const mcpRes = await fetch(MCP_GATEWAY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tool, args }),
-                  });
-                  const result = await mcpRes.json();
-                  responsePayload.mcpResult = result;
-                } catch (err) {
-                  console.error('MCP Tool Execution Error:', err);
-                  responsePayload.toolTrace.status = 'error';
-                }
-              }
-
-              // Local UI/Game State Updates
-              if (
-                [
-                  'update_ui',
-                  'set_metronome',
-                  'reward_badge',
-                  'get_music_fact',
-                ].includes(tool)
-              ) {
-                responsePayload.stateUpdate = { tool, args };
-              }
-            }
-
-            ws.send(JSON.stringify(responsePayload));
-            metricsBuffer = []; // Clear buffer
-          }
+        if (handler) {
+          ctx = await handler.handle(data, ctx);
+        } else {
+          console.warn(`Unknown message type: ${data.type}`);
         }
       } catch (err) {
         console.error('Error processing WS message:', err);
@@ -100,10 +44,8 @@ export class SocketService {
     });
 
     ws.on('close', () => {
-      if (currentSessionId) {
-        console.log(
-          `WebSocket closed for session: ${currentSessionId}`
-        );
+      if (ctx.sessionId) {
+        console.log(`WebSocket closed for session: ${ctx.sessionId}`);
       }
     });
   }

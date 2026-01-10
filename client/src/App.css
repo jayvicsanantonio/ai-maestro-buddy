@@ -1,42 +1,132 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
+/* ===========================================
+   App.css - Main Application Styles
+   =========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+/* CSS Custom Properties / Design Tokens */
+:root {
+  --bg-dark: #2d1b4e;
+  --primary: #ffce00;
+  --accent: #ff4785;
+  --soft-blue: #4fb8ff;
+}
+
+/* Global Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Quicksand', sans-serif;
+  background: var(--bg-dark);
+  color: white;
+  overflow: hidden;
+}
+
+* {
+  user-select: none;
+}
+
+/* Layout */
+.app-layout {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.app-header {
   padding: 2rem;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05rem;
+  text-transform: uppercase;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.accent {
+  color: var(--primary);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Background */
+.bg-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 10%, rgba(74, 222, 128, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 90% 90%, rgba(251, 191, 36, 0.03) 0%, transparent 50%),
+    var(--bg-dark);
+  z-index: -1;
 }
 
-.card {
-  padding: 2em;
+/* Content */
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
-.read-the-docs {
-  color: #888;
+/* Decorative Elements */
+.decorations {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
 }
+
+.note {
+  position: absolute;
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.1);
+  animation: float 8s infinite ease-in-out;
+}
+
+.n1 { top: 15%; left: 10%; animation-delay: 0s; }
+.n2 { top: 70%; left: 15%; animation-delay: 2s; font-size: 3rem; }
+.n3 { top: 20%; left: 85%; animation-delay: 4s; }
+.n4 { top: 75%; left: 80%; animation-delay: 1s; font-size: 2rem; }
+
+/* Loading Screen */
+.loading-screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-dark);
+  color: white;
+  gap: 1.5rem;
+}
+
+.spin {
+  animation: spin 2s linear infinite;
+  color: var(--primary);
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(20deg); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
