@@ -1,3 +1,5 @@
+// Runs the MCP gateway server for tool requests.
+// Provides rhythm exercises, facts, and lessons.
 import express from 'express';
 import cors from 'cors';
 
@@ -87,6 +89,16 @@ app.post('/mcp/execute', (req, res) => {
       "Did you know? Rhythm is the 'heartbeat' of music. Every song has one!",
       'Cool Fact: Some animals, like birds and whales, sing songs just like humans do!',
       'Did you know? Vibrations are what make sound. Feel your throat while you hum!',
+      'Did you know? The drum is one of the oldest instruments in history!',
+      'Fun Fact: A metronome helps musicians keep a steady beat!',
+      'Did you know? A violin has four strings tuned in fifths!',
+      'Cool Fact: The word tempo means the speed of music!',
+      'Did you know? Musical notes are named A through G and then repeat!',
+      'Fun Fact: The guitar is often tuned E A D G B E!',
+      'Did you know? A chorus is the part of a song that repeats!',
+      'Cool Fact: Orchestras can have more than 70 musicians!',
+      'Did you know? Drummers often count 1 2 3 4 to stay in time!',
+      'Fun Fact: The highest piano key is called C8!',
     ];
     const randomIndex = Math.floor(Math.random() * facts.length);
     return res.json({ fact: facts[randomIndex] });
