@@ -99,6 +99,16 @@ app.post('/mcp/execute', (req, res) => {
       'Cool Fact: Orchestras can have more than 70 musicians!',
       'Did you know? Drummers often count 1 2 3 4 to stay in time!',
       'Fun Fact: The highest piano key is called C8!',
+      'Did you know? The saxophone was invented in the 1840s!',
+      'Fun Fact: A rest is a beat of silence in music!',
+      'Did you know? A duet is a song for two performers!',
+      'Cool Fact: The triangle rings because it is made of steel!',
+      'Did you know? A crescendo means getting louder!',
+      'Fun Fact: The word forte means strong or loud in music!',
+      'Did you know? The harp has pedals to change its notes!',
+      'Cool Fact: Choirs often sing in four parts: soprano, alto, tenor, bass!',
+      'Did you know? A conductor keeps musicians together with a baton!',
+      'Fun Fact: A ukulele usually has four strings!',
     ];
     const randomIndex = Math.floor(Math.random() * facts.length);
     return res.json({ fact: facts[randomIndex] });
