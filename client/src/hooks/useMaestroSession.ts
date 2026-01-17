@@ -33,20 +33,28 @@ export const useMaestroSession = ({
     string | null
   >(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const sessionRef = useRef<SessionData | null>(null);
 
   // Initialize Session
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
   useEffect(() => {
     const initSession = async () => {
       try {
         let data: SessionData;
+        const existingSession = sessionRef.current;
 
-        if (initialSession && !session) {
+        if (initialSession && !existingSession) {
           data = initialSession;
           setSession(data);
         } else {
           // If no initial session, we might need to fetch or wait (handled by App.tsx usually)
           // For now assuming session is passed or we fetch
-          if (!session) {
+          if (!existingSession) {
             // Only fetch if we really have nothing
             const storedUid = localStorage.getItem('maestro_uid');
             const res = await fetch(`${API_URL}/session/start`, {
@@ -58,7 +66,7 @@ export const useMaestroSession = ({
             setSession(data);
             localStorage.setItem('maestro_uid', data.uid);
           } else {
-            data = session;
+            data = existingSession;
           }
         }
 
@@ -104,10 +112,19 @@ export const useMaestroSession = ({
         };
 
         ws.onclose = () => {
-          setIsConnecting(true); // Reconnection logic could go here
+          setIsConnecting(true);
+          if (reconnectTimerRef.current !== null) return;
+          const attempt = reconnectAttemptsRef.current;
+          const delay = Math.min(1000 * 2 ** attempt, 10000);
+          reconnectTimerRef.current = window.setTimeout(() => {
+            reconnectTimerRef.current = null;
+            reconnectAttemptsRef.current += 1;
+            void initSession();
+          }, delay);
         };
 
         wsRef.current = ws;
+        reconnectAttemptsRef.current = 0;
       } catch (err) {
         console.error('Failed to init session:', err);
         setConnectionError('Could not reach the AI Teacher.');
@@ -117,6 +134,10 @@ export const useMaestroSession = ({
 
     initSession();
     return () => {
+      if (reconnectTimerRef.current !== null) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       // We might not want to close strictly on every re-render if args change,
       // but for now strict cleanup is safer.
       wsRef.current?.close();

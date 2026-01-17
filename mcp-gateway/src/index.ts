@@ -157,12 +157,15 @@ app.get('/health', (req, res) => {
 });
 
 app.post('/mcp/execute', (req, res) => {
-  const { tool, args } = req.body;
+  const { tool, args: rawArgs } = req.body;
+  const args = rawArgs ?? {};
   console.log(`[MCP] Executing tool: ${tool}`, args);
 
   if (tool === 'get_rhythm_exercises') {
-    const level = args.level || 1;
-    const style = args.style;
+    const level =
+      typeof args.level === 'number' ? args.level : 1;
+    const style =
+      typeof args.style === 'string' ? args.style : undefined;
 
     let filtered = EXERCISES.filter((ex) => ex.level <= level);
     if (style) {
@@ -205,7 +208,8 @@ app.post('/mcp/execute', (req, res) => {
   }
 
   if (tool === 'get_theory_lesson') {
-    const topic = args.topic || 'rhythm';
+    const topic =
+      typeof args.topic === 'string' ? args.topic : 'rhythm';
     const lessons: Record<string, string> = {
       rhythm:
         'Rhythm is a pattern of sounds and silence. It tells us when to play and when to rest!',

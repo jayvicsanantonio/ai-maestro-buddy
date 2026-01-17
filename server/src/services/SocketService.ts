@@ -28,9 +28,21 @@ export class SocketService {
       metricsBuffer: [],
     };
 
-    ws.on('message', async (msg: string) => {
+    ws.on('message', async (msg: unknown) => {
       try {
-        const data = JSON.parse(msg);
+        const raw =
+          typeof msg === 'string'
+            ? msg
+            : Buffer.isBuffer(msg)
+              ? msg.toString('utf-8')
+              : msg instanceof ArrayBuffer
+                ? Buffer.from(msg).toString('utf-8')
+                : '';
+        if (!raw) {
+          console.warn('Received non-text WS message');
+          return;
+        }
+        const data = JSON.parse(raw);
         const handler = getHandler(data.type);
 
         if (handler) {

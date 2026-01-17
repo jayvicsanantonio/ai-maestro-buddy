@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { api } from '../services/api';
 
 export const useSpeech = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -8,7 +9,10 @@ export const useSpeech = () => {
   );
 
   const speakNative = useCallback((text: string) => {
-    if (!synth.current) return;
+    if (!synth.current) {
+      setIsSpeaking(false);
+      return;
+    }
 
     // Cancel any previous speech
     synth.current.cancel();
@@ -37,23 +41,7 @@ export const useSpeech = () => {
         setIsSpeaking(true);
 
         // 2. Fetch high-quality audio from the BFF
-        const response = await fetch(
-          'http://localhost:3001/api/tts',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text }),
-          }
-        );
-
-        if (!response.ok) {
-          console.warn(
-            'Premium TTS failed, falling back to native browser speech.'
-          );
-          return speakNative(text);
-        }
-
-        const blob = await response.blob();
+        const blob = await api.synthesizeSpeech(text);
         const url = URL.createObjectURL(blob);
 
         // 3. Play the audio

@@ -87,15 +87,34 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         ]);
         setNewBadgeToReveal({ type: badgeType, reason: badgeReason });
       }
-      if (tool === 'get_music_fact') {
-        // Assume args might be { fact: "..." } or content comes separately
-        // The original code set `currentFact` which triggered the modal
-        // We'll assume the message content is the fact for now or args has it
-        // Let's rely on the coach sending it as content or a specific arg
-      }
     },
-    onMcpResult: (result: unknown) =>
-      setAvailableExercises(result as RhythmExercise[]),
+    onMcpResult: (result: unknown) => {
+      if (
+        result &&
+        typeof result === 'object' &&
+        'fact' in result
+      ) {
+        const fact = (result as { fact: string }).fact;
+        if (typeof fact === 'string') {
+          setCurrentFact(fact);
+          return;
+        }
+      }
+
+      if (
+        result &&
+        typeof result === 'object' &&
+        'lesson' in result
+      ) {
+        const lesson = (result as { lesson: string }).lesson;
+        if (typeof lesson === 'string') {
+          setFeedback(lesson);
+          return;
+        }
+      }
+
+      setAvailableExercises(result as RhythmExercise[]);
+    },
   });
 
   // Game Hook

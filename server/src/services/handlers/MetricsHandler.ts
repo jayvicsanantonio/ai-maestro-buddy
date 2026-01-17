@@ -16,6 +16,10 @@ export const MetricsHandler: MessageHandler = {
   ): Promise<MessageContext> {
     const { metricsBuffer, coach, sessionId, ws } = ctx;
 
+    if (!coach || !sessionId) {
+      return ctx;
+    }
+
     metricsBuffer.push(data.metrics);
 
     // Process every METRICS_BATCH_SIZE metrics
@@ -38,7 +42,13 @@ export const MetricsHandler: MessageHandler = {
         const { tool, args } = toolTrace;
 
         // MCP Calls
-        if (tool === 'get_rhythm_exercises') {
+        if (
+          [
+            'get_rhythm_exercises',
+            'get_music_fact',
+            'get_theory_lesson',
+          ].includes(tool)
+        ) {
           try {
             const mcpRes = await fetch(config.mcpGatewayUrl, {
               method: 'POST',
@@ -55,12 +65,7 @@ export const MetricsHandler: MessageHandler = {
 
         // Local UI/Game State Updates
         if (
-          [
-            'update_ui',
-            'set_metronome',
-            'reward_badge',
-            'get_music_fact',
-          ].includes(tool)
+          ['update_ui', 'set_metronome', 'reward_badge'].includes(tool)
         ) {
           responsePayload.stateUpdate = { tool, args };
         }
