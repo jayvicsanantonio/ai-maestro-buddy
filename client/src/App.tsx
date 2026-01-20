@@ -9,6 +9,7 @@ import {
 } from './components/HUD/DeveloperHUD';
 import { RefreshCw } from 'lucide-react';
 import { api } from './services/api';
+import { StoryProvider } from './contexts/StoryContext';
 import './App.css';
 
 /**
@@ -78,37 +79,39 @@ function App() {
   }
 
   return (
-    <div className="app-layout">
-      <div className="bg-gradient" />
+    <StoryProvider>
+      <div className="app-layout">
+        <div className="bg-gradient" />
 
-      {/* Decorative Musical Notes */}
-      <div className="decorations" aria-hidden="true">
-        <div className="note n1">♪</div>
-        <div className="note n2">♫</div>
-        <div className="note n3">♬</div>
-        <div className="note n4">♩</div>
-      </div>
-
-      <header className="app-header">
-        <div className="logo">
-          Maestro<span className="accent">Buddy</span>
+        {/* Decorative Musical Notes */}
+        <div className="decorations" aria-hidden="true">
+          <div className="note n1">♪</div>
+          <div className="note n2">♫</div>
+          <div className="note n3">♬</div>
+          <div className="note n4">♩</div>
         </div>
-      </header>
 
-      <div className="content-wrapper">
-        {showOnboarding ? (
-          <OnboardingFlow onComplete={handleOnboardingComplete} />
-        ) : (
-          <RhythmQuest
-            onLog={handleLog}
-            key={session?.sessionId}
-            initialSession={session || undefined}
-          />
-        )}
+        <header className="app-header">
+          <div className="logo">
+            Maestro<span className="accent">Buddy</span>
+          </div>
+        </header>
+
+        <div className="content-wrapper">
+          {showOnboarding ? (
+            <OnboardingFlow onComplete={handleOnboardingComplete} />
+          ) : (
+            <RhythmQuest
+              onLog={handleLog}
+              key={session?.sessionId}
+              initialSession={session || undefined}
+            />
+          )}
+        </div>
+
+        <DeveloperHUD ref={hudRef} />
       </div>
-
-      <DeveloperHUD ref={hudRef} />
-    </div>
+    </StoryProvider>
   );
 }
 

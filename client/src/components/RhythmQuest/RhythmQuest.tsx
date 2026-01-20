@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Music, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -15,12 +15,15 @@ import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 import { StickerBook } from '../Rewards/StickerBook';
 import { XPLayer } from '../HUD/XPLayer';
 import { BadgeReveal } from '../Rewards/BadgeReveal';
+import { LevelUpCelebration } from '../Rewards/LevelUpCelebration';
 import { FactCard } from '../HUD/FactCard';
+import { WorldProgressBar } from '../HUD/WorldProgressBar';
 
 import { MetronomeVisual } from './MetronomeVisual';
 import { ControlPanel } from './ControlPanel';
 import { PeakHistory } from './PeakHistory';
 import { FeedbackLayer } from './FeedbackLayer';
+import { StreakCelebration } from './StreakCelebration';
 
 import styles from './RhythmQuest.module.css';
 
@@ -39,6 +42,16 @@ interface RhythmQuestProps {
   onLog: (log: Omit<ToolLog, 'id' | 'timestamp'>) => void;
   initialSession?: SessionData;
 }
+
+const debugBtnStyle = {
+  background: 'none',
+  border: '1px solid white',
+  color: 'white',
+  fontSize: '0.7rem',
+  padding: '5px 10px',
+  cursor: 'pointer',
+  borderRadius: '5px',
+};
 
 export const RhythmQuest: React.FC<RhythmQuestProps> = ({
   onLog,
@@ -61,6 +74,13 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
     reason: string;
   } | null>(null);
   const [currentFact, setCurrentFact] = useState<string | null>(null);
+
+  // Celebration State
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [celebrationLevel, setCelebrationLevel] = useState(1);
+  const [streakMilestone, setStreakMilestone] = useState(0);
+  const [showStreakCelebration, setShowStreakCelebration] =
+    useState(false);
 
   // Session Hook
   const {
@@ -89,11 +109,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
       }
     },
     onMcpResult: (result: unknown) => {
-      if (
-        result &&
-        typeof result === 'object' &&
-        'fact' in result
-      ) {
+      if (result && typeof result === 'object' && 'fact' in result) {
         const fact = (result as { fact: string }).fact;
         if (typeof fact === 'string') {
           setCurrentFact(fact);
@@ -128,13 +144,26 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
   const {
     isPlaying,
     peaks,
+    streak,
     xp,
     level,
     xpToNextLevel,
     mood,
     activeFeedback,
     toggleGame,
-  } = useRhythmGame({ bpm, onPeakDetected });
+  } = useRhythmGame({
+    bpm,
+    onPeakDetected,
+    onLevelUp: (newLevel) => {
+      setCelebrationLevel(newLevel);
+      setShowLevelUp(true);
+    },
+    onStreakMilestone: (streak) => {
+      setStreakMilestone(streak);
+      setShowStreakCelebration(true);
+      setTimeout(() => setShowStreakCelebration(false), 3000);
+    },
+  });
 
   // Handlers
   const handleSaveCharacter = async (settings: CharacterSettings) => {
@@ -187,6 +216,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
           <Music size={16} />
           <span>Rhythm Quest</span>
         </div>
+        <WorldProgressBar />
         <h1>Feel the Beat</h1>
         <div className={styles.characterZone}>
           <MaestroGuide
@@ -262,6 +292,15 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         <BadgeReveal
           badge={newBadgeToReveal}
           onClose={() => setNewBadgeToReveal(null)}
+        />
+        <LevelUpCelebration
+          level={celebrationLevel}
+          isVisible={showLevelUp}
+          onClose={() => setShowLevelUp(false)}
+        />
+        <StreakCelebration
+          streak={streakMilestone}
+          isVisible={showStreakCelebration}
         />
         <FactCard
           fact={currentFact}

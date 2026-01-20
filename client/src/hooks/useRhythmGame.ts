@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useAudioAnalyzer } from './useAudioAnalyzer';
 import { audioManager } from '../utils/AudioManager';
 import type { CharacterMood } from '../components/MaestroCharacter/MaestroCharacter';
+import { useStory } from '../contexts/StoryContext';
 
 interface UseRhythmGameProps {
   bpm: number;
@@ -10,19 +11,23 @@ interface UseRhythmGameProps {
     offset: number,
     bpm: number
   ) => void;
+  onLevelUp?: (level: number) => void;
+  onStreakMilestone?: (streak: number) => void;
 }
 
 export const useRhythmGame = ({
   bpm,
   onPeakDetected,
+  onLevelUp,
+  onStreakMilestone,
 }: UseRhythmGameProps) => {
+  const { xp: storyXp, level: storyLevel, addXp } = useStory();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [peaks, setPeaks] = useState<
     { id: number; time: number; offset: number }[]
   >([]);
   const [streak, setStreak] = useState(0);
-  const [xp, setXp] = useState(0);
-  const [level, setLevel] = useState(1);
   const [mood, setMood] = useState<CharacterMood>('neutral');
   const [activeFeedback, setActiveFeedback] = useState<{
     id: number;
@@ -32,7 +37,7 @@ export const useRhythmGame = ({
 
   const startTimeRef = useRef<number>(0);
   const questIdCounter = useRef(0);
-  const xpToNextLevel = level * 100;
+  const xpToNextLevel = storyLevel * 100;
 
   const handlePeak = useCallback(
     (time: number) => {
@@ -74,17 +79,21 @@ export const useRhythmGame = ({
 
       setStreak(nextStreak);
 
-      // XP
+      // Streak Milestone Celebration
+      if (nextStreak > 0 && nextStreak % 5 === 0) {
+        onStreakMilestone?.(nextStreak);
+        audioManager.playStreakMilestone?.();
+      }
+
+      // XP & Story Progression
       if (hitType !== 'off') {
         const gain = hitType === 'perfect' ? 10 : 5;
-        setXp((prev) => {
-          const next = prev + gain;
-          if (next >= xpToNextLevel) {
-            setLevel((l) => l + 1);
-            return next - xpToNextLevel;
-          }
-          return next;
-        });
+        const { leveledUp, newLevel } = addXp(gain);
+
+        if (leveledUp) {
+          onLevelUp?.(newLevel);
+          audioManager.playLevelUp?.();
+        }
       }
 
       // Mood
@@ -113,7 +122,7 @@ export const useRhythmGame = ({
         type: hitType,
       });
     },
-    [bpm, streak, xpToNextLevel, onPeakDetected]
+    [bpm, streak, onPeakDetected, addXp, onLevelUp, onStreakMilestone]
   );
 
   const { startListening, stopListening } =
@@ -135,8 +144,8 @@ export const useRhythmGame = ({
     isPlaying,
     peaks,
     streak,
-    xp,
-    level,
+    xp: storyXp,
+    level: storyLevel,
     xpToNextLevel,
     mood,
     activeFeedback,

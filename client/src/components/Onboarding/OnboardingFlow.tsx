@@ -4,6 +4,7 @@ import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 import type { CharacterSettings } from '../../types/shared';
 import { MaestroGuide } from '../MaestroCharacter/MaestroGuide';
 import { Music, Sparkles, Rocket, ArrowRight } from 'lucide-react';
+import { ONBOARDING_STORY } from '../../data/storyContent';
 
 interface OnboardingFlowProps {
   onComplete: (settings: CharacterSettings) => void;
@@ -38,15 +39,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const getStepText = (s: OnboardingStep): string => {
     switch (s) {
       case 'splash':
-        return "Welcome to MaestroBuddy! Your magical music adventure awaits. Let's start!";
+        return ONBOARDING_STORY.storyIntro;
       case 'intro':
-        return "Hi there! I'm so excited to be your music teacher. We're going to explore the world of rhythm together! But first, let's get you ready for the quest.";
+        return ONBOARDING_STORY.characterIntro;
       case 'character':
         return 'How do I look? You can change my color and give me some cool accessories!';
       case 'tutorial':
-        return "To play, first listen to my beat, then clap or tap along when you feel the rhythm. You'll earn cool badges as you get better!";
+        return ONBOARDING_STORY.tutorial;
       case 'ready':
-        return "You're ready! Your journey starts now. Let's make some music!";
+        return ONBOARDING_STORY.ready;
       default:
         return '';
     }
@@ -77,14 +78,17 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 </h1>
               </div>
               <p className="splash-tagline">
-                Your Magical Music Adventure Awaits!
+                The Kingdom of Music Needs a Hero!
               </p>
+              <div className="lore-preview">
+                {ONBOARDING_STORY.splash.headline}
+              </div>
               <button
                 className="onboarding-primary-button pulse"
                 onClick={nextStep}
               >
                 <Rocket size={24} />
-                <span>Let's Start!</span>
+                <span>Save the Music!</span>
               </button>
             </motion.div>
           )}
@@ -93,24 +97,32 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             <motion.div
               key="intro"
               className="onboarding-card intro-screen"
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -100, opacity: 0 }}
+              initial={{ x: 100, opacity: 0, rotate: 5 }}
+              animate={{ x: 0, opacity: 1, rotate: 0 }}
+              exit={{ x: -100, opacity: 0, rotate: -5 }}
+              transition={{ type: 'spring', damping: 20 }}
             >
-              <Sparkles size={60} color="var(--primary)" />
-              <h2>Hi there!</h2>
+              <div className="hero-badge">
+                <Sparkles
+                  size={60}
+                  color="var(--primary)"
+                  className="sparkle-spin"
+                />
+              </div>
+              <h2>Rhythm Hero!</h2>
               <p>
-                I'm so excited to be your music teacher. We're going
-                to explore the world of rhythm together!
+                The Music Kingdom is fading! But I can feel the music
+                in your heart. 🎵
               </p>
-              <p className="sub-text">
-                But first, let's get you ready for the quest...
+              <p className="highlight-text">
+                Together, we'll restore the groove and save the
+                creatures from the Silence!
               </p>
               <button
                 className="onboarding-primary-button"
                 onClick={nextStep}
               >
-                <span>Next</span>
+                <span>Start Quest</span>
                 <ArrowRight size={24} />
               </button>
             </motion.div>
@@ -140,22 +152,34 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             <motion.div
               key="tutorial"
               className="onboarding-card tutorial-screen"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.2 }}
             >
               <div className="tutorial-visual">
+                <motion.div
+                  className="magic-beat"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  ⚡
+                </motion.div>
                 <div className="wave-icon">🔊</div>
               </div>
-              <h2>How to Play</h2>
-              <p>1. Listen to my beat!</p>
-              <p>2. Clap or tap along when you feel the rhythm.</p>
-              <p>3. Earn cool badges as you get better!</p>
+              <h2>Rhythm Training</h2>
+              <div className="quest-list">
+                <p>1. Listen to Maestro's magic beat!</p>
+                <p>2. Tap along to release Note Sparks!</p>
+                <p>3. Drive back the Silence and save the world!</p>
+              </div>
               <button
                 className="onboarding-primary-button"
                 onClick={nextStep}
               >
-                <span>Got it!</span>
+                <span>I'm Ready!</span>
                 <Check size={24} />
               </button>
             </motion.div>
@@ -311,18 +335,65 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         }
 
         .tutorial-visual {
-          width: 120px;
-          height: 120px;
-          background: rgba(255,255,255,0.1);
+          width: 140px;
+          height: 140px;
+          background: rgba(255, 255, 255, 0.1);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 4rem;
+          position: relative;
+          border: 4px solid var(--primary);
+          box-shadow: 0 0 30px rgba(79, 184, 255, 0.3);
         }
 
-        .party-popper {
-          font-size: 5rem;
+        .magic-beat {
+          position: absolute;
+          font-size: 3rem;
+          z-index: 1;
+        }
+
+        .quest-list {
+          text-align: left;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .quest-list p {
+          font-size: 1.1rem !important;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .lore-preview {
+          background: rgba(255, 255, 255, 0.15);
+          padding: 1rem 2rem;
+          border-radius: 1.5rem;
+          font-weight: 700;
+          color: var(--primary);
+          font-size: 1.1rem;
+          margin: 0.5rem 0;
+        }
+
+        .highlight-text {
+          font-weight: 700;
+          color: #FFD700 !important;
+          text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        }
+
+        .sparkle-spin {
+          animation: sparkle-spin 4s linear infinite;
+        }
+
+        @keyframes sparkle-spin {
+          from { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.2); }
+          to { transform: rotate(360deg) scale(1); }
         }
       `}</style>
     </div>
