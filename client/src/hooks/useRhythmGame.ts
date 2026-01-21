@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useAudioAnalyzer } from './useAudioAnalyzer';
 import { audioManager } from '../utils/AudioManager';
 import type { CharacterMood } from '../components/MaestroCharacter/MaestroCharacter';
-import { useStory } from '../contexts/StoryContext';
+import { useStory } from './useStory';
 
 interface UseRhythmGameProps {
   bpm: number;

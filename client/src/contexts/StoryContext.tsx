@@ -1,6 +1,4 @@
 import React, {
-  createContext,
-  useContext,
   useState,
   useEffect,
   useCallback,
@@ -9,8 +7,11 @@ import React, {
 import {
   getWorldForLevel,
   getChapterProgress,
-  type World,
 } from '../data/storyContent';
+import {
+  StoryContext,
+  type StoryContextValue,
+} from './StoryContextRegistry';
 
 interface StoryState {
   level: number;
@@ -20,16 +21,6 @@ interface StoryState {
   currentChapter: number;
   completedChapters: number[];
   unlockedAbilities: string[];
-}
-
-interface StoryContextValue extends StoryState {
-  currentWorld: World;
-  addXp: (amount: number) => { leveledUp: boolean; newLevel: number };
-  completeChapter: (worldId: number, chapterId: number) => void;
-  unlockAbility: (ability: string) => void;
-  addStars: (amount: number) => void;
-  resetStory: () => void;
-  chapterProgress: number; // 0-1 progress through current world's chapters
 }
 
 const STORAGE_KEY = 'maestro_story_progress';
@@ -42,16 +33,6 @@ const defaultState: StoryState = {
   currentChapter: 1,
   completedChapters: [],
   unlockedAbilities: [],
-};
-
-const StoryContext = createContext<StoryContextValue | null>(null);
-
-export const useStory = (): StoryContextValue => {
-  const context = useContext(StoryContext);
-  if (!context) {
-    throw new Error('useStory must be used within a StoryProvider');
-  }
-  return context;
 };
 
 interface StoryProviderProps {

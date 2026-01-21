@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
-import { useStory } from '../../contexts/StoryContext';
+import { useStory } from '../../hooks/useStory';
+import type { Chapter } from '../../data/storyContent';
 
 export const WorldProgressBar: React.FC = () => {
   const { currentWorld, currentChapter, level } = useStory();
@@ -32,7 +33,7 @@ export const WorldProgressBar: React.FC = () => {
 
         {/* Chapter dots */}
         <div className="chapter-dots">
-          {currentWorld.chapters.map((_, i) => (
+          {currentWorld.chapters.map((_: Chapter, i: number) => (
             <motion.div
               key={i}
               className={`chapter-dot ${i < currentChapter ? 'completed' : ''} ${i === currentChapter - 1 ? 'current' : ''}`}

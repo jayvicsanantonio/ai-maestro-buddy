@@ -494,5 +494,133 @@
     "bpm": 80,
     "status": "idle",
     "updatedAt": "2026-01-20T07:14:54.586Z"
+  },
+  "ceeb82ba-2675-43bf-a823-650e89015ac2": {
+    "sessionId": "ceeb82ba-2675-43bf-a823-650e89015ac2",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-20T08:23:39.398Z"
+  },
+  "02587eb9-c0be-455b-8baf-87600d25e06b": {
+    "sessionId": "02587eb9-c0be-455b-8baf-87600d25e06b",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-20T08:23:39.399Z"
+  },
+  "2d73fb6c-cb3f-4bc9-a5f9-e62984562f0e": {
+    "sessionId": "2d73fb6c-cb3f-4bc9-a5f9-e62984562f0e",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:36:42.114Z"
+  },
+  "beec2a83-a30d-4237-9a83-3de2383fda0c": {
+    "sessionId": "beec2a83-a30d-4237-9a83-3de2383fda0c",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:36:42.114Z"
+  },
+  "16be53d1-cb9f-499d-b928-e1e7d44b6165": {
+    "sessionId": "16be53d1-cb9f-499d-b928-e1e7d44b6165",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:40:03.122Z"
+  },
+  "af9401c7-e745-4e85-ac9b-58f456665d70": {
+    "sessionId": "af9401c7-e745-4e85-ac9b-58f456665d70",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:40:03.124Z"
+  },
+  "bb62b51c-f03c-4ea6-bbdd-327bcb251d1d": {
+    "sessionId": "bb62b51c-f03c-4ea6-bbdd-327bcb251d1d",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:40:03.452Z"
+  },
+  "50d3761c-4b2e-44dc-a0b7-6badc3d5bab6": {
+    "sessionId": "50d3761c-4b2e-44dc-a0b7-6badc3d5bab6",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:40:03.452Z"
+  },
+  "41fa8f88-c25c-469e-8259-9450d666ff05": {
+    "sessionId": "41fa8f88-c25c-469e-8259-9450d666ff05",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:40:13.851Z"
+  },
+  "3463e55e-9c04-4bc8-95ae-be55874f0a99": {
+    "sessionId": "3463e55e-9c04-4bc8-95ae-be55874f0a99",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:40:13.851Z"
+  },
+  "305c7b8c-f5c5-4bf6-a693-f58a6903e05e": {
+    "sessionId": "305c7b8c-f5c5-4bf6-a693-f58a6903e05e",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:44:31.537Z"
+  },
+  "766c49a3-6be0-4570-95d2-1177125b53a5": {
+    "sessionId": "766c49a3-6be0-4570-95d2-1177125b53a5",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:44:31.538Z"
+  },
+  "5ee3f9fb-f1c7-442a-a5be-6ab62fe67cec": {
+    "sessionId": "5ee3f9fb-f1c7-442a-a5be-6ab62fe67cec",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:44:31.538Z"
+  },
+  "ec7faa24-42a6-42b6-86b8-cc50a7a5bb31": {
+    "sessionId": "ec7faa24-42a6-42b6-86b8-cc50a7a5bb31",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:44:31.538Z"
+  },
+  "73d0a209-e56f-4006-a1d0-4e7bd4731e33": {
+    "sessionId": "73d0a209-e56f-4006-a1d0-4e7bd4731e33",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:44:31.539Z"
+  },
+  "326bd276-5b80-4080-887d-3ec4e244aa1e": {
+    "sessionId": "326bd276-5b80-4080-887d-3ec4e244aa1e",
+    "uid": "guest-bff06ae3",
+    "quest": "rhythm",
+    "bpm": 80,
+    "status": "idle",
+    "updatedAt": "2026-01-21T01:44:31.539Z"
   }
 }

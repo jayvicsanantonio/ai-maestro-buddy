@@ -15,8 +15,14 @@ export const useAudioAnalyzer = (
       });
       streamRef.current = stream;
 
-      const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const audioContext = new (
+        window.AudioContext ||
+        (
+          window as Window & {
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).webkitAudioContext
+      )();
       audioContextRef.current = audioContext;
 
       const source = audioContext.createMediaStreamSource(stream);

@@ -37,10 +37,18 @@ export const useMaestroSession = ({
   const reconnectAttemptsRef = useRef(0);
   const sessionRef = useRef<SessionData | null>(null);
 
-  // Initialize Session
+  // Use refs for callbacks to avoid reconnect loops when they change
+  const onFeedbackRef = useRef(onFeedback);
+  const onLogRef = useRef(onLog);
+  const onStateUpdateRef = useRef(onStateUpdate);
+  const onMcpResultRef = useRef(onMcpResult);
+
   useEffect(() => {
-    sessionRef.current = session;
-  }, [session]);
+    onFeedbackRef.current = onFeedback;
+    onLogRef.current = onLog;
+    onStateUpdateRef.current = onStateUpdate;
+    onMcpResultRef.current = onMcpResult;
+  }, [onFeedback, onLog, onStateUpdate, onMcpResult]);
 
   useEffect(() => {
     const initSession = async () => {
@@ -91,14 +99,14 @@ export const useMaestroSession = ({
             const msg = JSON.parse(e.data);
 
             if (msg.type === 'feedback') {
-              if (msg.content) onFeedback(msg.content);
-              if (msg.toolTrace) onLog(msg.toolTrace);
+              if (msg.content) onFeedbackRef.current(msg.content);
+              if (msg.toolTrace) onLogRef.current(msg.toolTrace);
               if (msg.stateUpdate) {
                 const { tool, args } = msg.stateUpdate;
-                onStateUpdate(tool, args);
+                onStateUpdateRef.current(tool, args);
               }
               if (msg.mcpResult) {
-                onMcpResult(msg.mcpResult);
+                onMcpResultRef.current(msg.mcpResult);
               }
             }
           } catch (err) {
@@ -142,10 +150,10 @@ export const useMaestroSession = ({
       // but for now strict cleanup is safer.
       wsRef.current?.close();
     };
-  }, [initialSession]); // Removed dependencies that change often to avoid reconnect loops
+  }, [initialSession]);
 
   const sendMetrics = useCallback(
-    (metrics: any) => {
+    (metrics: Record<string, unknown>) => {
       if (wsRef.current?.readyState === WebSocket.OPEN && session) {
         wsRef.current.send(
           JSON.stringify({
@@ -159,7 +167,9 @@ export const useMaestroSession = ({
     [session]
   );
 
-  const updateCharacter = async (character: any) => {
+  const updateCharacter = async (
+    character: Record<string, unknown>
+  ) => {
     if (!session) return;
     try {
       const res = await fetch(`${API_URL}/student/update`, {

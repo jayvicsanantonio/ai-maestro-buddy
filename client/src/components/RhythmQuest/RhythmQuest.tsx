@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { Music, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -42,16 +42,6 @@ interface RhythmQuestProps {
   onLog: (log: Omit<ToolLog, 'id' | 'timestamp'>) => void;
   initialSession?: SessionData;
 }
-
-const debugBtnStyle = {
-  background: 'none',
-  border: '1px solid white',
-  color: 'white',
-  fontSize: '0.7rem',
-  padding: '5px 10px',
-  cursor: 'pointer',
-  borderRadius: '5px',
-};
 
 export const RhythmQuest: React.FC<RhythmQuestProps> = ({
   onLog,
@@ -294,12 +284,12 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
           onClose={() => setNewBadgeToReveal(null)}
         />
         <LevelUpCelebration
-          level={celebrationLevel}
+          level={celebrationLevel || level}
           isVisible={showLevelUp}
           onClose={() => setShowLevelUp(false)}
         />
         <StreakCelebration
-          streak={streakMilestone}
+          streak={streakMilestone || streak}
           isVisible={showStreakCelebration}
         />
         <FactCard

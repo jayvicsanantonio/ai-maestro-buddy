@@ -90,10 +90,17 @@ export const LevelUpCelebration: React.FC<
 
   useEffect(() => {
     if (isVisible) {
-      setShowConfetti(true);
+      // Delay to avoid synchronous setState warning and better align with animation
+      const confettiTimer = setTimeout(
+        () => setShowConfetti(true),
+        100
+      );
       speak(`Level Up! ${levelData.title}! ${levelData.message}`);
-      const timer = setTimeout(() => setShowConfetti(false), 4000);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(() => setShowConfetti(false), 4100);
+      return () => {
+        clearTimeout(confettiTimer);
+        clearTimeout(timer);
+      };
     }
   }, [isVisible, speak, levelData.title, levelData.message]);
 
