@@ -16,61 +16,86 @@ export class MultimodalLiveService {
 
   /**
    * Initializes the connection to Gemini Multimodal Live API.
+   * Returns a promise that resolves when the connection is open and setup.
    */
-  async setup() {
+  async setup(): Promise<void> {
     if (this.isSetup) return;
 
-    // The endpoint for Vertex AI Multimodal Live (BiDi)
-    const url = `wss://${config.location}-aiplatform.googleapis.com/v1/projects/${config.projectId}/locations/${config.location}/publishers/google/models/${config.geminiModel}:streamGenerateContent`;
+    return new Promise((resolve, reject) => {
+      // The endpoint for Vertex AI Multimodal Live (BiDi)
+      const url = `wss://${config.location}-aiplatform.googleapis.com/v1/projects/${config.projectId}/locations/${config.location}/publishers/google/models/${config.geminiModel}:streamGenerateContent`;
 
-    // Note: In a real production environment, we would handle Auth tokens here.
-    // For the hackathon, we assume the environment has Application Default Credentials.
-    this.geminiWs = new WebSocket(url);
+      // Note: In a real production environment, we would handle Auth tokens here.
+      // For the hackathon, we assume the environment has Application Default Credentials.
+      this.geminiWs = new WebSocket(url);
 
-    this.geminiWs.on('open', () => {
-      console.log('Connected to Gemini Multimodal Live API');
-      // Send setup message
-      const setupMsg = {
-        setup: {
-          model: `projects/${config.projectId}/locations/${config.location}/publishers/google/models/${config.geminiModel}`,
-          generation_config: {
-            response_modalities: ['AUDIO', 'TEXT'],
+      this.geminiWs.on('open', () => {
+        console.log('Connected to Gemini Multimodal Live API');
+        // Send setup message
+        const setupMsg = {
+          setup: {
+            model: `projects/${config.projectId}/locations/${config.location}/publishers/google/models/${config.geminiModel}`,
+            generation_config: {
+              response_modalities: ['AUDIO', 'TEXT'],
+            },
           },
-        },
-      };
-      this.geminiWs?.send(JSON.stringify(setupMsg));
-    });
+        };
+        this.geminiWs?.send(JSON.stringify(setupMsg));
+        this.isSetup = true;
+        resolve();
+      });
 
-    this.geminiWs.on('message', (data) => {
-      try {
-        const msg = JSON.parse(data.toString());
-        // Forward relevant parts back to the client (voice or text)
-        this.clientWs.send(
-          JSON.stringify({
-            type: 'feedback',
-            content: msg.serverContent?.modelTurn?.parts?.[0]?.text,
-            audio:
-              msg.serverContent?.modelTurn?.parts?.[0]?.inlineData
-                ?.data, // Base64 audio if present
-          })
-        );
-      } catch (err) {
-        console.error('Error parsing Gemini Live response:', err);
-      }
-    });
+      this.geminiWs.on('message', (data) => {
+        try {
+          const msg = JSON.parse(data.toString());
+          const part = msg.serverContent?.modelTurn?.parts?.[0];
+          const content = part?.text;
+          const audio = part?.inlineData?.data;
 
-    this.geminiWs.on('error', (err) => {
-      console.error('Gemini Live WebSocket error:', err);
-    });
+          // Only send if there's actual content/audio and client is ready
+          if (
+            (content || audio) &&
+            this.clientWs &&
+            this.clientWs.readyState === WebSocket.OPEN
+          ) {
+            try {
+              this.clientWs.send(
+                JSON.stringify({
+                  type: 'feedback',
+                  content,
+                  audio,
+                })
+              );
+            } catch (sendErr) {
+              console.error(
+                'Error sending feedback to client:',
+                sendErr
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Error parsing Gemini Live response:', err);
+        }
+      });
 
-    this.isSetup = true;
+      this.geminiWs.on('error', (err) => {
+        console.error('Gemini Live WebSocket error:', err);
+        if (!this.isSetup) {
+          reject(err);
+        }
+      });
+    });
   }
 
   /**
    * Sends audio data to Gemini.
    */
   sendAudio(base64Data: string) {
-    if (!this.geminiWs || this.geminiWs.readyState !== WebSocket.OPEN)
+    if (
+      !this.isSetup ||
+      !this.geminiWs ||
+      this.geminiWs.readyState !== WebSocket.OPEN
+    )
       return;
 
     const msg = {
@@ -86,7 +111,15 @@ export class MultimodalLiveService {
     this.geminiWs.send(JSON.stringify(msg));
   }
 
+  /**
+   * Closes the connection and resets service state.
+   */
   close() {
-    this.geminiWs?.close();
+    if (this.geminiWs) {
+      this.geminiWs.removeAllListeners();
+      this.geminiWs.close();
+      this.geminiWs = null;
+    }
+    this.isSetup = false;
   }
 }

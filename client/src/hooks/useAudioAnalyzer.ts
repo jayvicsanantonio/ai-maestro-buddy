@@ -9,8 +9,11 @@ export const useAudioAnalyzer = (
   const streamRef = useRef<MediaStream | null>(null);
 
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const startListening = useCallback(async () => {
+    if (isListening) return;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -20,14 +23,16 @@ export const useAudioAnalyzer = (
       const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
 
-      // Load the AudioWorklet processor
+      // Load the AudioWorklet processor - using .js as suggested for browser compatibility
       const workletUrl = new URL(
-        '../audio/peak-processor.ts',
+        '../audio/peak-processor.js',
         import.meta.url
       );
       await audioContext.audioWorklet.addModule(workletUrl);
 
       const source = audioContext.createMediaStreamSource(stream);
+      sourceRef.current = source;
+
       const workletNode = new AudioWorkletNode(
         audioContext,
         'peak-processor'
@@ -43,23 +48,28 @@ export const useAudioAnalyzer = (
       };
 
       source.connect(workletNode);
-      // No need to connect to destination unless we want to hear back (monitoring)
-
       setIsListening(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
     }
-  }, [onPeak, onAudio]);
+  }, [onPeak, onAudio, isListening]);
 
   const stopListening = useCallback(() => {
     if (workletNodeRef.current) {
       workletNodeRef.current.disconnect();
+      workletNodeRef.current = null;
+    }
+    if (sourceRef.current) {
+      sourceRef.current.disconnect();
+      sourceRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
+      audioContextRef.current = null;
     }
     setIsListening(false);
   }, []);
