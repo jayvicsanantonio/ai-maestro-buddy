@@ -41,13 +41,19 @@ export class MultimodalLiveService {
           },
         };
         this.geminiWs?.send(JSON.stringify(setupMsg));
-        this.isSetup = true;
-        resolve();
       });
 
       this.geminiWs.on('message', (data) => {
         try {
           const msg = JSON.parse(data.toString());
+
+          // Handle setup confirmation from Gemini
+          if (msg.setupComplete) {
+            this.isSetup = true;
+            resolve();
+            return;
+          }
+
           const part = msg.serverContent?.modelTurn?.parts?.[0];
           const content = part?.text;
           const audio = part?.inlineData?.data;
@@ -84,13 +90,31 @@ export class MultimodalLiveService {
           reject(err);
         }
       });
+
+      this.geminiWs.on('close', (code, reason) => {
+        if (!this.isSetup) {
+          reject(
+            new Error(
+              `Gemini connection closed during setup: ${code} ${reason}`
+            )
+          );
+        } else if (this.clientWs.readyState === WebSocket.OPEN) {
+          this.clientWs.send(
+            JSON.stringify({
+              type: 'error',
+              message: 'Gemini connection closed',
+            })
+          );
+        }
+        this.close();
+      });
     });
   }
 
   /**
    * Sends audio data to Gemini.
    */
-  sendAudio(base64Data: string) {
+  async sendAudio(base64Data: string): Promise<void> {
     if (
       !this.isSetup ||
       !this.geminiWs ||
@@ -108,7 +132,13 @@ export class MultimodalLiveService {
         ],
       },
     };
-    this.geminiWs.send(JSON.stringify(msg));
+
+    return new Promise((resolve, reject) => {
+      this.geminiWs!.send(JSON.stringify(msg), (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
   }
 
   /**

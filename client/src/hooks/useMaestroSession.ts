@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { SessionData, ToolLog } from '../types/shared';
+import type {
+  CharacterSettings,
+  SessionData,
+  ToolLog,
+} from '../types/shared';
 
 const WS_URL =
   import.meta.env.VITE_WS_URL ||
@@ -182,9 +186,7 @@ export const useMaestroSession = ({
     [session]
   );
 
-  const updateCharacter = async (
-    character: Record<string, unknown>
-  ) => {
+  const updateCharacter = async (character: CharacterSettings) => {
     if (!session) return;
     try {
       const res = await fetch(`${API_URL}/student/update`, {

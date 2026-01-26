@@ -164,7 +164,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
 
   // Handlers
   const handleSaveCharacter = async (settings: CharacterSettings) => {
-    await updateCharacter(settings as any);
+    await updateCharacter(settings);
     setShowCreator(false);
   };
 

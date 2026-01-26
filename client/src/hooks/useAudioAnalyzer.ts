@@ -51,6 +51,25 @@ export const useAudioAnalyzer = (
       setIsListening(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
+      // Robust cleanup on failure
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+      if (sourceRef.current) {
+        sourceRef.current.disconnect();
+        sourceRef.current = null;
+      }
+      if (workletNodeRef.current) {
+        workletNodeRef.current.disconnect();
+        workletNodeRef.current = null;
+      }
+      setIsListening(false);
+      throw err;
     }
   }, [onPeak, onAudio, isListening]);
 

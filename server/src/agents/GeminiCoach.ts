@@ -49,6 +49,17 @@ export class GeminiCoach {
         project: PROJECT_ID,
         location: LOCATION,
       });
+      const generationConfig: any = {
+        maxOutputTokens: 256,
+        temperature: 0.7,
+      };
+
+      // Only attach thinkingConfig for models that support it
+      if (config.geminiModel.includes('gemini-3')) {
+        // @ts-expect-error - thinkingConfig is a new feature in Gemini 3 not yet in all SDK types
+        generationConfig.thinkingConfig = { include_thoughts: true };
+      }
+
       const model = this.vertexAI.getGenerativeModel({
         model: config.geminiModel,
         systemInstruction: SYSTEM_PROMPT,
@@ -58,12 +69,7 @@ export class GeminiCoach {
             threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
           },
         ],
-        generationConfig: {
-          maxOutputTokens: 256,
-          temperature: 0.7,
-          // @ts-ignore - Gemini 3 specific feature
-          thinkingConfig: { include_thoughts: true },
-        },
+        generationConfig,
       });
 
       const declarations: FunctionDeclaration[] = Object.entries(
@@ -114,8 +120,9 @@ export class GeminiCoach {
       const candidate = candidates[0]!;
       const parts = candidate.content.parts || [];
 
-      const call = parts.find((p) => p.functionCall);
-      const textPart = parts.find((p) => p.text);
+      // Filter out thought parts to ensure only actual text is shown to the user
+      const call = parts.find((p: any) => p.functionCall);
+      const textPart = parts.find((p: any) => p.text && !p.thought);
       const text = textPart?.text || 'Keep it up!';
 
       if (call && call.functionCall) {

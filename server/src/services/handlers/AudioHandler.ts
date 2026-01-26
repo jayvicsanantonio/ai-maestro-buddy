@@ -13,15 +13,21 @@ export const AudioHandler: MessageHandler = {
   ): Promise<MessageContext> {
     if (!ctx.sessionId) return ctx;
 
-    // Use a custom property on the context to persist the live service
-    // In a real app, this would be managed by a service registry or class field
-    if (!(ctx as any).liveService) {
-      (ctx as any).liveService = new MultimodalLiveService(ctx.ws);
-      await (ctx as any).liveService.setup();
+    const sessionCtx = ctx as any;
+    if (!sessionCtx.liveService) {
+      sessionCtx.liveService = new MultimodalLiveService(ctx.ws);
+      sessionCtx.liveServiceSetupPromise =
+        sessionCtx.liveService.setup();
     }
 
     if (data.audio) {
-      (ctx as any).liveService.sendAudio(data.audio);
+      try {
+        // Ensure setup is complete before sending audio
+        await sessionCtx.liveServiceSetupPromise;
+        await sessionCtx.liveService.sendAudio(data.audio);
+      } catch (err) {
+        console.error('Error handling audio stream:', err);
+      }
     }
 
     return ctx;
