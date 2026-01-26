@@ -132,15 +132,22 @@ export const useRhythmGame = ({
     onAudio
   );
 
-  const toggleGame = () => {
+  const toggleGame = async () => {
     if (isPlaying) {
       stopListening();
       setIsPlaying(false);
     } else {
-      startTimeRef.current = performance.now() / 1000;
-      startListening();
-      setIsPlaying(true);
-      setMood('neutral');
+      try {
+        startTimeRef.current = performance.now() / 1000;
+        await startListening();
+        setIsPlaying(true);
+        setMood('neutral');
+      } catch (err) {
+        console.error('Failed to start game:', err);
+        setIsPlaying(false);
+        // Rethrow or handle locally
+        throw err;
+      }
     }
   };
 

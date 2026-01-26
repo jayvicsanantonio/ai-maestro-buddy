@@ -28,7 +28,8 @@
     "express-ws": "^5.0.2",
     "ioredis": "^5.8.2",
     "node-fetch": "^3.3.2",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

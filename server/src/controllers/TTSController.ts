@@ -21,7 +21,8 @@ export class TTSController {
     const audio = await ttsService.synthesize(text);
 
     if (!audio) {
-      res.status(500).json({ error: 'Voice synthesis failed' });
+      // Return 204 to signal no audio content (client will fallback to native speech)
+      res.status(204).end();
       return;
     }
 
