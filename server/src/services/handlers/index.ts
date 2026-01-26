@@ -1,5 +1,6 @@
 import { AuthHandler } from './AuthHandler.js';
 import { MetricsHandler } from './MetricsHandler.js';
+import { AudioHandler } from './AudioHandler.js';
 import type { MessageHandler, MessageContext } from './types.js';
 
 export type { MessageHandler, MessageContext };
@@ -8,7 +9,11 @@ export type { MessageHandler, MessageContext };
  * Registry of all WebSocket message handlers.
  * Handlers are indexed by message type for O(1) lookup.
  */
-const handlers: MessageHandler[] = [AuthHandler, MetricsHandler];
+const handlers: MessageHandler[] = [
+  AuthHandler,
+  MetricsHandler,
+  AudioHandler,
+];
 
 export const handlerRegistry = new Map<string, MessageHandler>(
   handlers.map((h) => [h.type, h])

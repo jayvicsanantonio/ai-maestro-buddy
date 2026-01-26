@@ -167,6 +167,21 @@ export const useMaestroSession = ({
     [session]
   );
 
+  const sendAudio = useCallback(
+    (base64: string) => {
+      if (wsRef.current?.readyState === WebSocket.OPEN && session) {
+        wsRef.current.send(
+          JSON.stringify({
+            type: 'audio',
+            sessionId: session.sessionId,
+            audio: base64,
+          })
+        );
+      }
+    },
+    [session]
+  );
+
   const updateCharacter = async (
     character: Record<string, unknown>
   ) => {
@@ -196,6 +211,7 @@ export const useMaestroSession = ({
     isConnecting,
     connectionError,
     sendMetrics,
+    sendAudio,
     updateCharacter,
     setSession,
   };

@@ -50,7 +50,7 @@ export class GeminiCoach {
         location: LOCATION,
       });
       const model = this.vertexAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: config.geminiModel,
         systemInstruction: SYSTEM_PROMPT,
         safetySettings: [
           {
@@ -58,7 +58,12 @@ export class GeminiCoach {
             threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
           },
         ],
-        generationConfig: { maxOutputTokens: 256, temperature: 0.7 },
+        generationConfig: {
+          maxOutputTokens: 256,
+          temperature: 0.7,
+          // @ts-ignore - Gemini 3 specific feature
+          thinkingConfig: { include_thoughts: true },
+        },
       });
 
       const declarations: FunctionDeclaration[] = Object.entries(

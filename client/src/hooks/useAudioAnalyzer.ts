@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const useAudioAnalyzer = (
-  onPeak: (timestamp: number) => void
+  onPeak: (timestamp: number) => void,
+  onAudio?: (data: Int16Array) => void
 ) => {
   const [isListening, setIsListening] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
 
   const startListening = useCallback(async () => {
     try {
@@ -15,57 +17,43 @@ export const useAudioAnalyzer = (
       });
       streamRef.current = stream;
 
-      const audioContext = new (
-        window.AudioContext ||
-        (
-          window as Window & {
-            webkitAudioContext?: typeof AudioContext;
-          }
-        ).webkitAudioContext
-      )();
+      const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
 
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(
-        2048,
-        1,
-        1
+      // Load the AudioWorklet processor
+      const workletUrl = new URL(
+        '../audio/peak-processor.ts',
+        import.meta.url
       );
-      processorRef.current = processor;
+      await audioContext.audioWorklet.addModule(workletUrl);
 
-      const threshold = 0.15; // Volume threshold for claps
-      let lastPeakTime = 0;
+      const source = audioContext.createMediaStreamSource(stream);
+      const workletNode = new AudioWorkletNode(
+        audioContext,
+        'peak-processor'
+      );
+      workletNodeRef.current = workletNode;
 
-      processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        let maxVal = 0;
-        for (let i = 0; i < inputData.length; i++) {
-          if (Math.abs(inputData[i]) > maxVal) {
-            maxVal = Math.abs(inputData[i]);
-          }
-        }
-
-        if (maxVal > threshold) {
-          const now = audioContext.currentTime;
-          if (now - lastPeakTime > 0.1) {
-            // Debounce claps (100ms)
-            lastPeakTime = now;
-            onPeak(now);
-          }
+      workletNode.port.onmessage = (event) => {
+        if (event.data.type === 'peak') {
+          onPeak(event.data.timestamp);
+        } else if (event.data.type === 'audio' && onAudio) {
+          onAudio(event.data.data);
         }
       };
 
-      source.connect(processor);
-      processor.connect(audioContext.destination);
+      source.connect(workletNode);
+      // No need to connect to destination unless we want to hear back (monitoring)
+
       setIsListening(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
     }
-  }, [onPeak]);
+  }, [onPeak, onAudio]);
 
   const stopListening = useCallback(() => {
-    if (processorRef.current) {
-      processorRef.current.disconnect();
+    if (workletNodeRef.current) {
+      workletNodeRef.current.disconnect();
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());

@@ -13,6 +13,7 @@ interface UseRhythmGameProps {
   ) => void;
   onLevelUp?: (level: number) => void;
   onStreakMilestone?: (streak: number) => void;
+  onAudio?: (data: Int16Array) => void;
 }
 
 export const useRhythmGame = ({
@@ -20,6 +21,7 @@ export const useRhythmGame = ({
   onPeakDetected,
   onLevelUp,
   onStreakMilestone,
+  onAudio,
 }: UseRhythmGameProps) => {
   const { xp: storyXp, level: storyLevel, addXp } = useStory();
 
@@ -125,8 +127,10 @@ export const useRhythmGame = ({
     [bpm, streak, onPeakDetected, addXp, onLevelUp, onStreakMilestone]
   );
 
-  const { startListening, stopListening } =
-    useAudioAnalyzer(handlePeak);
+  const { startListening, stopListening } = useAudioAnalyzer(
+    handlePeak,
+    onAudio
+  );
 
   const toggleGame = () => {
     if (isPlaying) {

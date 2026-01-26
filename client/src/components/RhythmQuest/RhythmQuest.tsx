@@ -19,6 +19,8 @@ import { LevelUpCelebration } from '../Rewards/LevelUpCelebration';
 import { FactCard } from '../HUD/FactCard';
 import { WorldProgressBar } from '../HUD/WorldProgressBar';
 
+import { pcmToBase64 } from '../../utils/audioUtils';
+
 import { MetronomeVisual } from './MetronomeVisual';
 import { ControlPanel } from './ControlPanel';
 import { PeakHistory } from './PeakHistory';
@@ -78,6 +80,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
     isConnecting,
     connectionError,
     sendMetrics,
+    sendAudio,
     updateCharacter,
   } = useMaestroSession({
     initialSession,
@@ -153,11 +156,15 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
       setShowStreakCelebration(true);
       setTimeout(() => setShowStreakCelebration(false), 3000);
     },
+    onAudio: (data) => {
+      const base64 = pcmToBase64(data);
+      sendAudio(base64);
+    },
   });
 
   // Handlers
   const handleSaveCharacter = async (settings: CharacterSettings) => {
-    await updateCharacter(settings);
+    await updateCharacter(settings as any);
     setShowCreator(false);
   };
 

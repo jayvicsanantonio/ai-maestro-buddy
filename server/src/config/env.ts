@@ -8,4 +8,9 @@ export const config = {
     'http://localhost:3002/mcp/execute',
   projectId: process.env.GOOGLE_CLOUD_PROJECT,
   location: process.env.GOOGLE_CLOUD_LOCATION || 'us-central1',
+  geminiModel:
+    process.env.GEMINI_MODEL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'gemini-3-flash'
+      : 'gemini-2.5-flash'),
 };

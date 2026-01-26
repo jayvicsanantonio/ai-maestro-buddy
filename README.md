@@ -36,10 +36,11 @@ MaestroBuddy uses a monorepo structure:
 Create a `.env` file in the root directory based on `.env.example`:
 
 ```bash
-GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=us-central1
 PORT=3001
 MCP_PORT=3002
+# Optional: Defaults to gemini-2.5-flash in dev, gemini-3-flash in production
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### 3. Usage
@@ -54,9 +55,9 @@ pnpm dev
 
 ## Tech Stack
 
-- **Frontend**: React, Framer Motion, Lucide icons, Vite, Wavesurfer.js.
-- **Backend**: Express, WebSocket (`express-ws`), uuid.
-- **AI**: Gemini 1.5 Flash (Vertex AI), Function Calling (Tools).
+- **Frontend**: React, Framer Motion, Lucide icons, Vite, Wavesurfer.js, **AudioWorklet** (Low-latency).
+- **Backend**: Express, WebSocket (`express-ws`), uuid, **Multimodal Live Bridge**.
+- **AI**: Gemini 3 Flash / 2.5 Flash, **Multimodal Live API (Real-time Audio)**, Function Calling (Tools).
 - **Communication**: Real-time metrics and audio feedback via WebSockets.
 - **Persistence**: File-based storage (with @google-cloud/firestore dependency included).
 
