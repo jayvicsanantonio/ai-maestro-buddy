@@ -1,9 +1,30 @@
+/// <reference lib="WebWorker" />
+
+abstract class AudioWorkletProcessor {
+  abstract process(
+    inputs: Float32Array[][],
+    outputs: Float32Array[][],
+    parameters: Record<string, Float32Array>
+  ): boolean;
+  protected readonly port!: MessagePort;
+}
+
+declare const currentTime: number;
+declare function registerProcessor(
+  name: string,
+  processor: typeof AudioWorkletProcessor
+): void;
+
 class PeakProcessor extends AudioWorkletProcessor {
   private threshold = 0.15;
   private lastPeakTime = 0;
   private debounceTime = 0.1; // 100ms
 
-  process(inputs: Float32Array[][], outputs: Float32Array[][]) {
+  process(
+    inputs: Float32Array[][],
+    _outputs: Float32Array[][],
+    _parameters: Record<string, Float32Array>
+  ) {
     const input = inputs[0];
     if (!input || input.length === 0) return true;
 

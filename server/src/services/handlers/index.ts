@@ -3,7 +3,7 @@ import { MetricsHandler } from './MetricsHandler.js';
 import { AudioHandler } from './AudioHandler.js';
 import type { MessageHandler, MessageContext } from './types.js';
 
-export type { MessageHandler, MessageContext };
+export type { MessageContext };
 
 /**
  * Registry of all WebSocket message handlers.
@@ -15,7 +15,7 @@ const handlers: MessageHandler[] = [
   AudioHandler,
 ];
 
-export const handlerRegistry = new Map<string, MessageHandler>(
+const handlerRegistry = new Map<string, MessageHandler>(
   handlers.map((h) => [h.type, h])
 );
 

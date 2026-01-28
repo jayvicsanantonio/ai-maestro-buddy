@@ -56,7 +56,6 @@ export class GeminiCoach {
 
       // Only attach thinkingConfig for models that support it
       if (config.geminiModel.includes('gemini-3')) {
-        // @ts-expect-error - thinkingConfig is a new feature in Gemini 3 not yet in all SDK types
         generationConfig.thinkingConfig = { include_thoughts: true };
       }
 

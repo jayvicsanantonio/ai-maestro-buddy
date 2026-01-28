@@ -22,7 +22,7 @@ export interface Chapter {
   completion: string;
 }
 
-export const WORLDS: World[] = [
+const WORLDS: World[] = [
   {
     id: 1,
     name: 'Melody Meadows',

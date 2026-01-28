@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import type { World } from '../data/storyContent';
 
-export interface StoryState {
+interface StoryState {
   level: number;
   xp: number;
   totalStars: number;

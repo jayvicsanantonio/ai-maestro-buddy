@@ -6,7 +6,7 @@ const VOICE_CONFIG = {
   name: 'en-US-Journey-F',
 };
 
-export class TTSService {
+class TTSService {
   private client: textToSpeech.TextToSpeechClient | null = null;
 
   constructor() {

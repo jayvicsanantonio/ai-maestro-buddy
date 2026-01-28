@@ -2,7 +2,6 @@
 export type {
   CharacterSettings,
   StudentProfile,
-  QuestState,
   SessionData,
   ToolLog,
 } from '@ai-maestro-buddy/shared';
