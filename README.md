@@ -55,9 +55,9 @@ pnpm dev
 
 ## Tech Stack
 
-- **Frontend**: React, Framer Motion, Lucide icons, Vite, Wavesurfer.js, **AudioWorklet** (Low-latency).
+- **Frontend**: React, Framer Motion, Lucide icons, Vite, **AudioWorklet** (Low-latency).
 - **Backend**: Express, WebSocket (`express-ws`), uuid, **Multimodal Live Bridge**.
-- **AI**: Gemini 3 Flash / 2.5 Flash, **Multimodal Live API (Real-time Audio)**, Function Calling (Tools).
+- **AI**: Gemini 2.5/3 Flash (Custom naming), **Multimodal Live API (Real-time Audio)**, Function Calling (Tools).
 - **Communication**: Real-time metrics and audio feedback via WebSockets.
 - **Persistence**: File-based storage (with @google-cloud/firestore dependency included).
 
