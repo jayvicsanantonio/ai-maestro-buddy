@@ -11,6 +11,6 @@ export const config = {
   geminiModel:
     process.env.GEMINI_MODEL ||
     (process.env.NODE_ENV === 'production'
-      ? 'gemini-3-flash'
-      : 'gemini-2.5-flash'),
+      ? 'gemini-2.0-flash'
+      : 'gemini-2.0-flash'),
 };

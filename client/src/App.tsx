@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useEffect } from 'react';
+import { useRef, useCallback, useState, use, Suspense } from 'react';
 import { RhythmQuest } from './components/RhythmQuest/RhythmQuest';
 import type { SessionData, CharacterSettings } from './types/shared';
 import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
@@ -13,14 +13,25 @@ import { StoryProvider } from './contexts/StoryContext';
 import './App.css';
 
 /**
- * Main application component.
- * Handles session initialization, onboarding flow, and game rendering.
+ * Promise for the initial session.
+ * In a real app, this might be better handled in a state management library
+ * or a more robust cache, but for this demonstration, we'll keep it simple.
  */
-function App() {
+const initialSessionPromise = api.startSession(
+  localStorage.getItem('maestro_uid')
+);
+
+function AppContent({
+  sessionPromise,
+}: {
+  sessionPromise: Promise<SessionData>;
+}) {
   const hudRef = useRef<DeveloperHUDHandle>(null);
-  const [session, setSession] = useState<SessionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const initialSession = use(sessionPromise);
+  const [session, setSession] = useState<SessionData>(initialSession);
+  const [showOnboarding, setShowOnboarding] = useState(
+    !initialSession.student.onboardingCompleted
+  );
 
   const handleLog = useCallback(
     (log: Omit<ToolLog, 'id' | 'timestamp'>) => {
@@ -29,54 +40,22 @@ function App() {
     []
   );
 
-  const initSession = useCallback(async () => {
-    try {
-      const storedUid = localStorage.getItem('maestro_uid');
-      const data = await api.startSession(storedUid);
-      setSession(data);
-      localStorage.setItem('maestro_uid', data.uid);
-
-      if (!data.student.onboardingCompleted) {
-        setShowOnboarding(true);
-      }
-    } catch (err) {
-      console.error('Failed to init session:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void initSession();
-  }, [initSession]);
-
   const handleOnboardingComplete = async (
     settings: CharacterSettings
   ) => {
-    if (!session) return;
-
     try {
-      await api.updateStudent(session.uid, {
+      const data = await api.updateStudent(session.uid, {
         character: settings,
         onboardingCompleted: true,
       });
 
-      // Refresh session to get updated data
-      await initSession();
+      // Update session with new student data
+      setSession((prev) => ({ ...prev, student: data.student }));
       setShowOnboarding(false);
     } catch (err) {
       console.error('Failed to complete onboarding:', err);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <RefreshCw className="spin" size={48} />
-        <p>Loading your musical world...</p>
-      </div>
-    );
-  }
 
   return (
     <StoryProvider>
@@ -103,8 +82,8 @@ function App() {
           ) : (
             <RhythmQuest
               onLog={handleLog}
-              key={session?.sessionId}
-              initialSession={session || undefined}
+              key={session.sessionId}
+              initialSession={session}
             />
           )}
         </div>
@@ -112,6 +91,21 @@ function App() {
         <DeveloperHUD ref={hudRef} />
       </div>
     </StoryProvider>
+  );
+}
+
+function App() {
+  return (
+    <Suspense
+      fallback={
+        <div className="loading-screen">
+          <RefreshCw className="spin" size={48} />
+          <p>Loading your musical world...</p>
+        </div>
+      }
+    >
+      <AppContent sessionPromise={initialSessionPromise} />
+    </Suspense>
   );
 }
 

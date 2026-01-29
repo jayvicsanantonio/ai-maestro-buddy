@@ -1,10 +1,10 @@
 import {
-  VertexAI,
-  ChatSession,
+  GoogleGenAI,
   HarmCategory,
   HarmBlockThreshold,
+  type Chat,
   type FunctionDeclaration,
-} from '@google-cloud/vertexai';
+} from '@google/genai';
 import { ToolRegistry } from './tools.js';
 import { config } from '../config/env.js';
 
@@ -40,47 +40,51 @@ Always produce valid JSON for tool calls.
 `;
 
 export class GeminiCoach {
-  private chat: ChatSession | null = null;
-  private vertexAI: VertexAI | null = null;
+  private chat: Chat | null = null;
+  private genAI: GoogleGenAI | null = null;
 
   constructor() {
     if (PROJECT_ID) {
-      this.vertexAI = new VertexAI({
+      this.genAI = new GoogleGenAI({
         project: PROJECT_ID,
         location: LOCATION,
+        vertexai: true,
       });
-      const generationConfig: any = {
-        maxOutputTokens: 256,
+
+      const configOverride: any = {
         temperature: 0.7,
+        maxOutputTokens: 256,
       };
 
-      // Only attach thinkingConfig for models that support it
-      if (config.geminiModel.includes('gemini-3')) {
-        generationConfig.thinkingConfig = { include_thoughts: true };
+      // Configuration for models that support thinking (Gemini 2.0+)
+      if (config.geminiModel.includes('thinking')) {
+        configOverride.thinkingConfig = {
+          includeThoughts: true,
+          thinkingBudget: 1024,
+        };
       }
-
-      const model = this.vertexAI.getGenerativeModel({
-        model: config.geminiModel,
-        systemInstruction: SYSTEM_PROMPT,
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-          },
-        ],
-        generationConfig,
-      });
 
       const declarations: FunctionDeclaration[] = Object.entries(
         ToolRegistry
       ).map(([name, schema]) => ({
         name,
         description: schema.description,
-        parameters: schema.parameters as any,
+        parametersJsonSchema: schema.parameters as any,
       }));
 
-      this.chat = model.startChat({
-        tools: [{ functionDeclarations: declarations }],
+      this.chat = this.genAI.chats.create({
+        model: config.geminiModel,
+        config: {
+          ...configOverride,
+          systemInstruction: SYSTEM_PROMPT,
+          safetySettings: [
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+            },
+          ],
+          tools: [{ functionDeclarations: declarations }],
+        },
       });
     }
   }
@@ -101,14 +105,13 @@ export class GeminiCoach {
     }
 
     try {
-      const result = await this.chat.sendMessage(
-        `Student metrics for the last window: ${JSON.stringify(
+      const result = await this.chat.sendMessage({
+        message: `Student metrics for the last window: ${JSON.stringify(
           metrics
-        )}`
-      );
-      const response = result.response;
+        )}`,
+      });
 
-      const candidates = response.candidates;
+      const candidates = result.candidates;
       if (
         !candidates ||
         candidates.length === 0 ||
@@ -116,12 +119,15 @@ export class GeminiCoach {
       ) {
         return { feedback: "I'm listening closely, keep going!" };
       }
+
       const candidate = candidates[0]!;
-      const parts = candidate.content.parts || [];
+      const parts = candidate.content?.parts || [];
 
       // Filter out thought parts to ensure only actual text is shown to the user
       const call = parts.find((p: any) => p.functionCall);
-      const textPart = parts.find((p: any) => p.text && !p.thought);
+      const textPart = parts.find(
+        (p: any) => p.text && !(p as any).thought
+      );
       const text = textPart?.text || 'Keep it up!';
 
       if (call && call.functionCall) {

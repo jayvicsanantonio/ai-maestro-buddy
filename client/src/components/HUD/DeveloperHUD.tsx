@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, useImperativeHandle, type Ref } from 'react';
 import { Terminal, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,77 +14,76 @@ export interface DeveloperHUDHandle {
   addLog: (log: Omit<ToolLog, 'id' | 'timestamp'>) => void;
 }
 
-export const DeveloperHUD = forwardRef<DeveloperHUDHandle>(
-  (_, ref) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [logs, setLogs] = useState<ToolLog[]>([]);
+interface DeveloperHUDProps {
+  ref?: Ref<DeveloperHUDHandle>;
+}
 
-    useImperativeHandle(ref, () => ({
-      addLog: (newLog) => {
-        setLogs((prev) => [
-          {
-            ...newLog,
-            id: Math.random().toString(36).slice(2, 9),
-            timestamp: new Date(),
-          },
-          ...prev.slice(0, 49),
-        ]);
-      },
-    }));
+export const DeveloperHUD = ({ ref }: DeveloperHUDProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [logs, setLogs] = useState<ToolLog[]>([]);
 
-    return (
-      <div className="hud-wrapper">
-        <button
-          className="hud-toggle"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <Bug size={18} />
-          <span>Agent HUD</span>
-          {isOpen ? (
-            <ChevronDown size={14} />
-          ) : (
-            <ChevronUp size={14} />
-          )}
-        </button>
+  useImperativeHandle(ref, () => ({
+    addLog: (newLog) => {
+      setLogs((prev) => [
+        {
+          ...newLog,
+          id: Math.random().toString(36).slice(2, 9),
+          timestamp: new Date(),
+        },
+        ...prev.slice(0, 49),
+      ]);
+    },
+  }));
 
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ y: 20, opacity: 0, scale: 0.95 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 20, opacity: 0, scale: 0.95 }}
-              className="hud-content"
-            >
-              <div className="hud-header">
-                <Terminal size={14} />
-                <span>Developer Trace Control</span>
-              </div>
-              <div className="hud-logs">
-                {logs.length === 0 && (
-                  <p className="no-logs">
-                    Waiting for agent activity...
-                  </p>
-                )}
-                {logs.map((log) => (
-                  <div key={log.id} className="hud-log-item">
-                    <div className="log-meta">
-                      <span className={`status-dot ${log.status}`} />
-                      <span className="log-tool">{log.tool}</span>
-                      <span className="log-time">
-                        {log.timestamp.toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <pre className="log-args">
-                      {JSON.stringify(log.args, null, 2)}
-                    </pre>
+  return (
+    <div className="hud-wrapper">
+      <button
+        className="hud-toggle"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Bug size={18} />
+        <span>Agent HUD</span>
+        {isOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 20, opacity: 0, scale: 0.95 }}
+            className="hud-content"
+          >
+            <div className="hud-header">
+              <Terminal size={14} />
+              <span>Developer Trace Control</span>
+            </div>
+            <div className="hud-logs">
+              {logs.length === 0 && (
+                <p className="no-logs">
+                  Waiting for agent activity...
+                </p>
+              )}
+              {logs.map((log) => (
+                <div key={log.id} className="hud-log-item">
+                  <div className="log-meta">
+                    <span className={`status-dot ${log.status}`} />
+                    <span className="log-tool">{log.tool}</span>
+                    <span className="log-time">
+                      {log.timestamp.toLocaleTimeString()}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  <pre className="log-args">
+                    {JSON.stringify(log.args, null, 2)}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <style>{`
+      <style>{`
         .hud-wrapper {
           position: fixed;
           bottom: 1.5rem;
@@ -213,7 +212,6 @@ export const DeveloperHUD = forwardRef<DeveloperHUDHandle>(
           border: 1px solid rgba(255, 255, 255, 0.03);
         }
       `}</style>
-      </div>
-    );
-  }
-);
+    </div>
+  );
+};
