@@ -28,6 +28,8 @@
   "author": "Jayvic San Antonio",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@vitest/ui": "^4.0.18",
+    "concurrently": "^9.2.1",
+    "vitest": "^4.0.18"
   }
 }
