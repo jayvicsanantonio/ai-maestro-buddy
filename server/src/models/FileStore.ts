@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import type { IStore } from './Store.js';
-import type { StudentProfile } from '../types/shared.js';
+import type { StudentProfile, SessionData } from '../types/shared.js';
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
@@ -9,7 +9,7 @@ const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 
 export class FileStore implements IStore {
   private studentsCache: Map<string, StudentProfile> = new Map();
-  private sessionsCache: Map<string, any> = new Map();
+  private sessionsCache: Map<string, SessionData> = new Map();
   private isInitialized = false;
 
   constructor() {
@@ -97,7 +97,10 @@ export class FileStore implements IStore {
     return updated;
   }
 
-  async saveSession(sessionId: string, data: any): Promise<void> {
+  async saveSession(
+    sessionId: string,
+    data: SessionData
+  ): Promise<void> {
     if (!this.isInitialized) await this.init();
 
     this.sessionsCache.set(sessionId, {
@@ -107,7 +110,7 @@ export class FileStore implements IStore {
     await this.saveSessions();
   }
 
-  async getSession(sessionId: string): Promise<any | null> {
+  async getSession(sessionId: string): Promise<SessionData | null> {
     if (!this.isInitialized) await this.init();
     return this.sessionsCache.get(sessionId) || null;
   }

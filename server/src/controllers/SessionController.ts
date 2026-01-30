@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { FileStore } from '../models/FileStore.js';
-import type { QuestState } from '../types/shared.js';
+import type { QuestState, SessionData } from '../types/shared.js';
 
 export class SessionController {
   private store: FileStore;
@@ -24,13 +24,15 @@ export class SessionController {
       status: 'idle',
     };
 
-    await this.store.saveSession(sessionId, questState);
-
-    res.json({
+    const sessionData: SessionData = {
       sessionId,
       uid,
       student,
       questState,
-    });
+    };
+
+    await this.store.saveSession(sessionId, sessionData);
+
+    res.json(sessionData);
   };
 }

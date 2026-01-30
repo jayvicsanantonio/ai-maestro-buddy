@@ -7,6 +7,7 @@ import {
 } from '@google/genai';
 import { ToolRegistry } from './tools.js';
 import { config } from '../config/env.js';
+import type { PerformanceMetric } from '../types/shared.js';
 
 const PROJECT_ID = config.projectId;
 const LOCATION = config.location;
@@ -51,7 +52,7 @@ export class GeminiCoach {
         vertexai: true,
       });
 
-      const configOverride: any = {
+      const configOverride: Record<string, unknown> = {
         temperature: 0.7,
         maxOutputTokens: 256,
       };
@@ -69,7 +70,7 @@ export class GeminiCoach {
       ).map(([name, schema]) => ({
         name,
         description: schema.description,
-        parametersJsonSchema: schema.parameters as any,
+        parametersJsonSchema: schema.parameters as any, // Cast necessary as library schema type is complex
       }));
 
       this.chat = this.genAI.chats.create({
@@ -90,7 +91,7 @@ export class GeminiCoach {
   }
 
   async processMetrics(
-    metrics: any[]
+    metrics: PerformanceMetric[]
   ): Promise<{ feedback: string; toolTrace?: any }> {
     if (!this.chat) {
       return {
@@ -124,9 +125,11 @@ export class GeminiCoach {
       const parts = candidate.content?.parts || [];
 
       // Filter out thought parts to ensure only actual text is shown to the user
-      const call = parts.find((p: any) => p.functionCall);
+      const call = parts.find(
+        (p) => (p as { functionCall?: unknown }).functionCall
+      );
       const textPart = parts.find(
-        (p: any) => p.text && !(p as any).thought
+        (p) => p.text && !(p as { thought?: boolean }).thought
       );
       const text = textPart?.text || 'Keep it up!';
 

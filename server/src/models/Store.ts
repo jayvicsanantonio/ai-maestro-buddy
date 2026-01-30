@@ -1,4 +1,4 @@
-import type { StudentProfile } from '../types/shared.js';
+import type { StudentProfile, SessionData } from '../types/shared.js';
 
 export interface IStore {
   getStudent(uid: string): Promise<StudentProfile>;
@@ -6,6 +6,6 @@ export interface IStore {
     uid: string,
     data: Partial<StudentProfile>
   ): Promise<StudentProfile>;
-  saveSession(sessionId: string, data: any): Promise<void>;
-  getSession(sessionId: string): Promise<any | null>;
+  saveSession(sessionId: string, data: SessionData): Promise<void>;
+  getSession(sessionId: string): Promise<SessionData | null>;
 }

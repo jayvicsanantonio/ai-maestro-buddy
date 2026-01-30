@@ -1,5 +1,10 @@
 import { config } from '../../config/env.js';
-import type { MessageHandler, MessageContext } from './types.js';
+import type {
+  MessageHandler,
+  MessageContext,
+  ClientMessage,
+  ServerMessage,
+} from './types.js';
 
 const METRICS_BATCH_SIZE = 5;
 
@@ -11,7 +16,7 @@ export const MetricsHandler: MessageHandler = {
   type: 'metrics',
 
   async handle(
-    data: { metrics: any },
+    data: ClientMessage,
     ctx: MessageContext
   ): Promise<MessageContext> {
     const { metricsBuffer, coach, sessionId, ws } = ctx;
@@ -20,22 +25,30 @@ export const MetricsHandler: MessageHandler = {
       return ctx;
     }
 
-    metricsBuffer.push(data.metrics);
+    if (data.metrics) {
+      metricsBuffer.push(data.metrics);
+    }
 
     // Process every METRICS_BATCH_SIZE metrics
     if (metricsBuffer.length >= METRICS_BATCH_SIZE && coach) {
       console.log(`Processing metrics window for ${sessionId}`);
 
       // AI Processing
-      const { feedback, toolTrace } = await coach.processMetrics(
-        metricsBuffer
-      );
+      const { feedback, toolTrace } =
+        await coach.processMetrics(metricsBuffer);
 
-      const responsePayload: any = {
+      const responsePayload: ServerMessage = {
         type: 'feedback',
         content: feedback,
-        toolTrace,
       };
+
+      if (toolTrace) {
+        responsePayload.toolTrace = {
+          tool: toolTrace.tool as string,
+          args: toolTrace.args as Record<string, unknown>,
+          status: toolTrace.status as 'success' | 'error' | 'pending',
+        };
+      }
 
       // Tool Execution Handling
       if (toolTrace && toolTrace.status === 'success') {
@@ -59,13 +72,17 @@ export const MetricsHandler: MessageHandler = {
             responsePayload.mcpResult = result;
           } catch (err) {
             console.error('MCP Tool Execution Error:', err);
-            responsePayload.toolTrace.status = 'error';
+            if (responsePayload.toolTrace) {
+              responsePayload.toolTrace.status = 'error';
+            }
           }
         }
 
         // Local UI/Game State Updates
         if (
-          ['update_ui', 'set_metronome', 'reward_badge'].includes(tool)
+          ['update_ui', 'set_metronome', 'reward_badge'].includes(
+            tool
+          )
         ) {
           responsePayload.stateUpdate = { tool, args };
         }

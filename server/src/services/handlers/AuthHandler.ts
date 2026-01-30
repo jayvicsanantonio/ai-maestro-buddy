@@ -1,5 +1,9 @@
 import { GeminiCoach } from '../../agents/GeminiCoach.js';
-import type { MessageHandler, MessageContext } from './types.js';
+import type {
+  MessageHandler,
+  MessageContext,
+  ClientMessage,
+} from './types.js';
 
 /**
  * Handles WebSocket 'auth' messages.
@@ -9,10 +13,11 @@ export const AuthHandler: MessageHandler = {
   type: 'auth',
 
   async handle(
-    data: { sessionId: string },
+    data: ClientMessage,
     ctx: MessageContext
   ): Promise<MessageContext> {
     const sessionId = data.sessionId;
+    if (!sessionId) return ctx;
     const coach = new GeminiCoach();
 
     console.log(`WebSocket authenticated for session: ${sessionId}`);

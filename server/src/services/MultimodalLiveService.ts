@@ -43,8 +43,10 @@ export class MultimodalLiveService {
               this.isSetup = true;
               resolve();
             },
-            onmessage: (msg: any) => {
-              const serverContent = msg.serverContent;
+            onmessage: (msg) => {
+              // Message is unknown, safely cast for inspection
+              const data = msg as { serverContent?: any };
+              const serverContent = data.serverContent;
               const modelTurn = serverContent?.modelTurn;
               const part = modelTurn?.parts?.[0];
 
@@ -73,7 +75,7 @@ export class MultimodalLiveService {
                 }
               }
             },
-            onerror: (err: any) => {
+            onerror: (err: unknown) => {
               console.error('Gemini Live session error:', err);
               if (!this.isSetup) {
                 reject(err);

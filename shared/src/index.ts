@@ -21,7 +21,21 @@ export interface StudentProfile {
   };
 }
 
-// Session Types
+// Session and Metrics Types
+export interface PerformanceMetric {
+  offset: number;
+  bpm: number;
+  timestamp?: number;
+}
+
+export interface SessionData {
+  sessionId: string;
+  uid: string;
+  student: StudentProfile;
+  questState: QuestState;
+  updatedAt?: string;
+}
+
 export interface QuestState {
   sessionId: string;
   uid: string;
@@ -30,11 +44,32 @@ export interface QuestState {
   status: 'idle' | 'playing' | 'paused';
 }
 
-export interface SessionData {
-  sessionId: string;
-  uid: string;
-  student: StudentProfile;
-  questState: QuestState;
+// WebSocket Communication Types
+export type ClientMessageType = 'auth' | 'metrics' | 'audio';
+export type ServerMessageType = 'system' | 'feedback' | 'error';
+
+export interface ClientMessage {
+  type: ClientMessageType;
+  sessionId?: string;
+  metrics?: PerformanceMetric;
+  audio?: string;
+}
+
+export interface ServerMessage {
+  type: ServerMessageType;
+  content?: string;
+  message?: string;
+  audio?: string;
+  toolTrace?: {
+    tool: string;
+    args: Record<string, unknown>;
+    status: 'success' | 'error' | 'pending';
+  };
+  mcpResult?: unknown;
+  stateUpdate?: {
+    tool: string;
+    args: Record<string, unknown>;
+  };
 }
 
 // Tool Types
