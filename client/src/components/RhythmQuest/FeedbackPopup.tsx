@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { SparkleBurst } from './SparkleBurst';
+import { SparkleBurst } from '../visuals/SparkleBurst';
 
 interface FeedbackPopupProps {
   text: string;

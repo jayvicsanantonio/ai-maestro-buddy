@@ -16,7 +16,7 @@ const levelNames: Record<number, string> = {
   5: 'Maestro Buddy',
 };
 
-export const XPLayer: React.FC<XPLayerProps> = ({
+export const XPProgressBar: React.FC<XPLayerProps> = ({
   xp,
   level,
   xpToNextLevel,

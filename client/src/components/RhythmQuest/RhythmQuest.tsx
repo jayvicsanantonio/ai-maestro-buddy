@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Music, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { useMaestroSession } from '../../hooks/useMaestroSession';
 import { useRhythmGame } from '../../hooks/useRhythmGame';
@@ -13,7 +13,7 @@ import type {
 import { MaestroGuide } from '../MaestroCharacter/MaestroGuide';
 import { CharacterCreator } from '../CharacterCreator/CharacterCreator';
 import { StickerBook } from '../Rewards/StickerBook';
-import { XPLayer } from '../HUD/XPLayer';
+import { XPProgressBar } from '../HUD/XPProgressBar';
 import { BadgeReveal } from '../Rewards/BadgeReveal';
 import { LevelUpCelebration } from '../Rewards/LevelUpCelebration';
 import { FactCard } from '../HUD/FactCard';
@@ -24,8 +24,8 @@ import { pcmToBase64 } from '../../utils/audioUtils';
 import { MetronomeVisual } from './MetronomeVisual';
 import { ControlPanel } from './ControlPanel';
 import { PeakHistory } from './PeakHistory';
-import { FeedbackLayer } from './FeedbackLayer';
-import { StreakCelebration } from './StreakCelebration';
+import { FeedbackPopup } from './FeedbackPopup';
+import { StreakCelebration } from '../Rewards/StreakCelebration';
 
 import styles from './RhythmQuest.module.css';
 
@@ -239,7 +239,17 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         style={{ width: '100%', maxWidth: '800px' }}
       >
         <MetronomeVisual bpm={bpm} isPlaying={isPlaying} />
-        <FeedbackLayer activeFeedback={activeFeedback} />
+        <div className={styles.feedbackLayer}>
+          <AnimatePresence>
+            {activeFeedback && (
+              <FeedbackPopup
+                key={activeFeedback.id}
+                text={activeFeedback.text}
+                type={activeFeedback.type}
+              />
+            )}
+          </AnimatePresence>
+        </div>
         <PeakHistory peaks={peaks} />
 
         {availableExercises.length > 0 && (
@@ -276,7 +286,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         )}
 
         <div className="rewards-zone" style={{ marginTop: '2rem' }}>
-          <XPLayer
+          <XPProgressBar
             xp={xp}
             level={level}
             xpToNextLevel={xpToNextLevel}
