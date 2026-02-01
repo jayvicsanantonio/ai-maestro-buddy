@@ -21,7 +21,13 @@ export const XPProgressBar: React.FC<XPLayerProps> = ({
   level,
   xpToNextLevel,
 }) => {
-  const progress = (xp / xpToNextLevel) * 100;
+  const calculateProgress = () => {
+    if (xpToNextLevel <= 0) return xp > 0 ? 100 : 0;
+    const rawProgress = (xp / xpToNextLevel) * 100;
+    return Math.min(Math.max(rawProgress, 0), 100);
+  };
+
+  const progress = calculateProgress();
 
   return (
     <div className="xp-layer">
@@ -46,6 +52,11 @@ export const XPProgressBar: React.FC<XPLayerProps> = ({
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          aria-label={`Progress: ${Math.round(progress)}%`}
         />
         <div
           className="progress-glow"
