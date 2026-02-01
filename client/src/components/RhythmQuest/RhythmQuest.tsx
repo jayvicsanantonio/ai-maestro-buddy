@@ -4,6 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { useMaestroSession } from '../../hooks/useMaestroSession';
 import { useRhythmGame } from '../../hooks/useRhythmGame';
+import {
+  useExercises,
+  type RhythmExercise,
+} from '../../hooks/useExercises';
+import { useRewards } from '../../hooks/useRewards';
+import { useCelebrations } from '../../hooks/useCelebrations';
+
 import type {
   CharacterSettings,
   ToolLog,
@@ -30,16 +37,6 @@ import { StreakCelebration } from '../Rewards/StreakCelebration';
 import styles from './RhythmQuest.module.css';
 
 // Types
-interface RhythmExercise {
-  id: string;
-  name: string;
-  style: string;
-  level: number;
-  bpm: number;
-  pattern: number[];
-  instructions: string;
-}
-
 interface RhythmQuestProps {
   onLog: (log: Omit<ToolLog, 'id' | 'timestamp'>) => void;
   initialSession?: SessionData;
@@ -55,24 +52,33 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
     "Tap 'Start Lesson' to begin!"
   );
   const [showCreator, setShowCreator] = useState(false);
-  const [availableExercises, setAvailableExercises] = useState<
-    RhythmExercise[]
-  >([]);
-  const [badges, setBadges] = useState<
-    { type: string; reason: string }[]
-  >([]);
-  const [newBadgeToReveal, setNewBadgeToReveal] = useState<{
-    type: string;
-    reason: string;
-  } | null>(null);
   const [currentFact, setCurrentFact] = useState<string | null>(null);
 
-  // Celebration State
-  const [showLevelUp, setShowLevelUp] = useState(false);
-  const [celebrationLevel, setCelebrationLevel] = useState(1);
-  const [streakMilestone, setStreakMilestone] = useState(0);
-  const [showStreakCelebration, setShowStreakCelebration] =
-    useState(false);
+  // Custom Hooks
+  const {
+    availableExercises,
+    setAvailableExercises,
+    handleLessonResult,
+    selectExercise,
+  } = useExercises({
+    onBpmChange: setBpm,
+    onFeedbackChange: setFeedback,
+  });
+
+  const { badges, newBadgeToReveal, rewardBadge, closeReveal } =
+    useRewards({
+      onFeedbackChange: setFeedback,
+    });
+
+  const {
+    showLevelUp,
+    celebrationLevel,
+    streakMilestone,
+    showStreakCelebration,
+    triggerLevelUp,
+    closeLevelUp,
+    triggerStreak,
+  } = useCelebrations();
 
   // Session Hook
   const {
@@ -93,12 +99,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
       if (tool === 'reward_badge') {
         const badgeType = args.type as string;
         const badgeReason = args.reason as string;
-        setFeedback(`🏆 BADGE EARNED: ${badgeType}! ${badgeReason}`);
-        setBadges((prev: { type: string; reason: string }[]) => [
-          ...prev,
-          { type: badgeType, reason: badgeReason },
-        ]);
-        setNewBadgeToReveal({ type: badgeType, reason: badgeReason });
+        rewardBadge(badgeType, badgeReason);
       }
     },
     onMcpResult: (result: unknown) => {
@@ -110,16 +111,8 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
         }
       }
 
-      if (
-        result &&
-        typeof result === 'object' &&
-        'lesson' in result
-      ) {
-        const lesson = (result as { lesson: string }).lesson;
-        if (typeof lesson === 'string') {
-          setFeedback(lesson);
-          return;
-        }
+      if (handleLessonResult(result)) {
+        return;
       }
 
       setAvailableExercises(result as RhythmExercise[]);
@@ -147,14 +140,9 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
   } = useRhythmGame({
     bpm,
     onPeakDetected,
-    onLevelUp: (newLevel) => {
-      setCelebrationLevel(newLevel);
-      setShowLevelUp(true);
-    },
+    onLevelUp: triggerLevelUp,
     onStreakMilestone: (streak) => {
-      setStreakMilestone(streak);
-      setShowStreakCelebration(true);
-      setTimeout(() => setShowStreakCelebration(false), 3000);
+      triggerStreak(streak);
     },
     onAudio: (data) => {
       const base64 = pcmToBase64(data);
@@ -267,13 +255,7 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
                 <button
                   key={ex.id}
                   className={styles.exerciseCard}
-                  onClick={() => {
-                    setBpm(ex.bpm);
-                    setFeedback(
-                      `Starting: ${ex.name}. ${ex.instructions}`
-                    );
-                    setAvailableExercises([]);
-                  }}
+                  onClick={() => selectExercise(ex)}
                 >
                   <span className={styles.exTitle}>{ex.name}</span>
                   <span className={styles.exMeta}>
@@ -296,14 +278,11 @@ export const RhythmQuest: React.FC<RhythmQuestProps> = ({
       </main>
 
       <footer className="quest-footer">
-        <BadgeReveal
-          badge={newBadgeToReveal}
-          onClose={() => setNewBadgeToReveal(null)}
-        />
+        <BadgeReveal badge={newBadgeToReveal} onClose={closeReveal} />
         <LevelUpCelebration
           level={celebrationLevel || level}
           isVisible={showLevelUp}
-          onClose={() => setShowLevelUp(false)}
+          onClose={closeLevelUp}
         />
         <StreakCelebration
           streak={streakMilestone || streak}
