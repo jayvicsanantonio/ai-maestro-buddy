@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { FileStore } from '../models/FileStore.js';
+import type { IStore } from '../models/Store.js';
 import type { QuestState, SessionData } from '../types/shared.js';
 
 export class SessionController {
-  private store: FileStore;
+  private store: IStore;
 
-  constructor(store: FileStore) {
+  constructor(store: IStore) {
     this.store = store;
   }
 

@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
-import { FileStore } from '../models/FileStore.js';
+import type { IStore } from '../models/Store.js';
 
 export class StudentController {
-  private store: FileStore;
+  private store: IStore;
 
-  constructor(store: FileStore) {
+  constructor(store: IStore) {
     this.store = store;
   }
 

@@ -1,5 +1,5 @@
 import type { WebSocket } from 'ws';
-import type { FileStore } from '../models/FileStore.js';
+import type { IStore } from '../models/Store.js';
 import { getHandler, type MessageContext } from './handlers/index.js';
 
 /**
@@ -7,9 +7,9 @@ import { getHandler, type MessageContext } from './handlers/index.js';
  * Uses a handler registry pattern for message processing.
  */
 export class SocketService {
-  private store: FileStore;
+  private store: IStore;
 
-  constructor(store: FileStore) {
+  constructor(store: IStore) {
     this.store = store;
   }
 
